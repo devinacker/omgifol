@@ -41,6 +41,27 @@ Linedef = make_struct(
    "block_sound", "invisible", "automap"]
 )
 
+ZLinedef = make_struct(
+  "Linedef", """Represents a map linedef (Hexen / ZDoom)""",
+  [["vx_a",   'h', -1],
+   ["vx_b",   'h', -1],
+   ["flags",  'h',  0],
+   ["action", 'b',  0],
+   ["arg1",   'b',  0],
+   ["arg2",   'b',  0],
+   ["arg3",   'b',  0],
+   ["arg4",   'b',  0],
+   ["arg5",   'b',  0],
+   ["front",  'h', -1],
+   ["back",   'h', -1]],
+  ["impassable", "block_monsters", "two_sided",
+   "upper_unpeg", "lower_unpeg", "secret",
+   "block_sound", "invisible", "automap",
+   "repeat", "player_use", "monster_cross",
+   "player_hit", "activate_any", "dummy",
+   "block_all"]
+)
+
 Thing = make_struct(
   "Thing", """Represents a map thing""",
   [["x",     'h', 0],
@@ -49,6 +70,25 @@ Thing = make_struct(
    ["type",  'h', 0],
    ["flags", 'h', 0]],
   ["easy", "medium", "hard", "deaf", "multiplayer"]
+)
+
+ZThing = make_struct(
+  "Thing", """Represents a map thing (Hexen / ZDoom)""",
+  [["tid",    'h', 0],
+   ["x",      'h', 0],
+   ["y",      'h', 0],
+   ["height", 'h', 0],
+   ["angle",  'h', 0],
+   ["type",   'h', 0],
+   ["flags",  'h', 0],
+   ["action", 'b', 0],
+   ["arg1",   'b', 0],
+   ["arg2",   'b', 0],
+   ["arg3",   'b', 0],
+   ["arg4",   'b', 0],
+   ["arg5",   'b', 0]],
+  ["easy", "medium", "hard", "deaf", "dormant",
+   "fighter", "cleric", "mage", "solo", "multiplayer", "deathmatch"]
 )
 
 Sector = make_struct(
@@ -121,8 +161,13 @@ class MapEditor:
             self.vertexes = self._unpack_lump(Vertex,    m["VERTEXES"].data)
             self.sidedefs = self._unpack_lump(Sidedef,   m["SIDEDEFS"].data)
             self.sectors  = self._unpack_lump(Sector,    m["SECTORS"].data)
-            self.things   = self._unpack_lump(Thing,     m["THINGS"].data)
-            self.linedefs = self._unpack_lump(Linedef,   m["LINEDEFS"].data)
+            
+            if "BEHAVIOR" in m: # Hexen / ZDoom map
+                self.things   = self._unpack_lump(ZThing,    m["THINGS"].data)
+                self.linedefs = self._unpack_lump(ZLinedef,  m["LINEDEFS"].data)
+            else:
+                self.things   = self._unpack_lump(Thing,     m["THINGS"].data)
+                self.linedefs = self._unpack_lump(Linedef,   m["LINEDEFS"].data)
         except KeyError as e:
             raise ValueError("map is missing %s lump" % e)
         
