@@ -1,0 +1,233 @@
+<html>
+<style>
+.tocindent { margin-left: 20px; }
+</style>
+<body>
+
+<h1>Omgifol manual</h1>
+
+<p><em>Note: this is ridiculously incomplete.</em>
+</p>
+<table border="0" id="toc"><tr id="toctitle"><td align="center">
+<b>Table of contents</b> <script type="text/javascript">showTocToggle("show","hide")</script></td></tr><tr id="tocinside"><td>
+<div class="tocline"><a href="#Installation">1 Installation</a><br /></div>
+
+<div class="tocline"><a href="#Using_Omgifol">2 Using Omgifol</a><br /></div>
+<div class="tocline"><a href="#WAD_objects">3 WAD objects</a><br /></div>
+<div class="tocindent">
+<a href="#Loading_from_WAD_files">3.1 Loading from WAD files</a><br />
+<a href="#Writing_to_WAD_files">3.2 Writing to WAD files</a><br />
+<a href="#Accessing_lumps">3.3 Accessing lumps</a><br />
+<div class="tocindent">
+<a href="#Lump_groups">3.3.1 Lump groups</a><br />
+</div>
+<a href="#Merging">3.4 Merging</a><br />
+</div>
+<div class="tocline"><a href="#Lumps">4 Lumps</a><br /></div>
+<div class="tocindent">
+<a href="#Graphic_lumps">4.1 Graphic lumps</a><br />
+</div>
+<div class="tocline"><a href="#Editors">5 Editors</a><br /></div>
+<div class="tocindent">
+<a href="#Map_editor">5.1 Map editor</a><br />
+
+</div>
+</td></tr></table>
+<a name="Installation"></a><h2>Installation</h2>
+<ol><li> Install Python 2.4, which can be downloaded from <a href="http://python.org" class='external' title="http://python.org">http://python.org</a>
+</li><li> Extract the files in the Omgifol package into a directory named "omg" in <em>pythondir</em>/Lib/site-packages (replace <em>pythondir</em> with the directory where Python is installed).
+</li></ol>
+<p>Optionally:
+
+</p>
+<ol><li> Install the <a href='http://www.pythonware.com/products/pil/' class='external' title="http://www.pythonware.com/products/pil/">Python Imaging Library</a><span class='urlexpansion'> (<i>http://www.pythonware.com/products/pil/</i>)</span>. This is required to save or load images.
+</li><li> Install <a href='http://psyco.sourceforge.net/' class='external' title="http://psyco.sourceforge.net/">Psyco</a><span class='urlexpansion'> (<i>http://psyco.sourceforge.net/</i>)</span>. This can make Omgifol quite a bit faster, typically 2-10x.
+
+</li></ol>
+<a name="Using_Omgifol"></a><h2>Using Omgifol</h2>
+<p>At the beginning of an interactive session, or as the first line in a Python script file, enter
+</p>
+<pre> from omg import *
+</pre>
+<a name="WAD_objects"></a><h2>WAD objects</h2>
+<p>A <tt >WAD</tt > is an abstract representation of a WAD file. A <tt >WAD</tt > object can load content from a WAD file, or save content to a WAD file, but is entirely memory-resident.
+
+</p>
+<a name="Loading_from_WAD_files"></a><h3>Loading from WAD files</h3>
+<p>The following are all equivalent:
+</p>
+<pre> a = WAD('wadfile.wad')
+
+ a = WAD(from_file='wadfile.wad')
+
+ f = open('wadfile.wad', 'rb')
+ a = WAD(from_file=f)
+
+ a = WAD()
+ a.from_file('wadfile.wad')
+
+ f = open('wadfile.wad', 'rb')
+ a = WAD()
+ a.from_file(f)
+</pre>
+<p>You can load more than one file to the same object:
+</p>
+<pre> a = WAD()
+ a.from_file(file1)
+ a.from_file(file2)
+ a.from_file(file3)
+</pre>
+<p>In this case, lumps from <em>file2</em> will overwrite those from <em>file1</em>
+
+with the same name, etc.
+</p>
+<a name="Writing_to_WAD_files"></a><h3>Writing to WAD files</h3>
+<p>If <em>a</em> is a <tt >WAD</tt > instance:
+</p>
+<pre> a.to_file('some_wad.wad')
+</pre>
+<a name="Accessing_lumps"></a><h3>Accessing lumps</h3>
+
+<p>Lumps are stored in <em>groups</em>. Each <tt >WAD</tt > holds a number of groups, representing different categories of lumps. Each group is an ordered dictionary; that is, it works just like a Python <tt ><a href='http://docs.python.org/tut/node7.html#SECTION007500000000000000000' class='external' title="http://docs.python.org/tut/node7.html#SECTION007500000000000000000">dict</a><span class='urlexpansion'> (<i>http://docs.python.org/tut/node7.html#SECTION007500000000000000000</i>)</span></tt > object but remembers in which order lumps were inserted.
+</p><p>All lumps are instances of the <tt >Lump</tt > class; see below for its documentation.
+
+</p><p>To retrieve the sprite called <tt >CYBR1A</tt > from the <tt >WAD</tt > object <em>a</em>, do:
+</p>
+<pre>   a.sprites['CYBR1A']
+</pre>
+<p>And to replace it with some other lump object called <tt >some_lump</tt >:
+</p>
+
+<pre>   a.sprites['CYBR1A'] = some_lump
+</pre>
+<p>To add a new lump, simply do as above with a lump name that does not yet exist.
+</p><p>Renaming and deleting is done as follows:
+</p>
+<pre>   a.sprites.rename('CYBR1A', 'NEW_NAME')
+   del a.sprites['CYBR1A']
+</pre>
+<a name="Lump_groups"></a><h4>Lump groups</h4>
+<p>By default, WADs recognize the following lump groups:
+</p>
+<pre>   sprites             Sprite graphics (between S and SS markers)
+   patches             Wall graphics (between P and PP markers)
+   flats               Flat graphics (between F and FF markers)
+   colormaps           Boom colormaps (between C markers)
+   ztextures           ZDoom textures (between TX markers)
+   maps                Map data
+   glmaps              GL nodes map data
+   music               Music (all lumps named D_*)
+   sounds              Sound effects (all lumps named DS* or DP*)
+   txdefs              TEXTURE1, TEXTURE2 and PNAMES
+   graphics            Titlepic, status bar, miscellaneous graphics
+   data                Everything else
+</pre>
+<p>This scheme can be modified if desired; refer to wad.py for the details.
+
+</p><p>The <tt >maps</tt > and <tt >glmaps</tt > are special. These do not contain lumps, but additional groups of lumps, one for each map. So if you access E1M1:
+</p>
+<pre>   a.maps['E1M1']
+</pre>
+<p>you will retrieve a group of lumps containing all the map's data. To retrieve
+the individual lumps, do:
+</p>
+<pre>   a.maps['E1M1']['SIDEDEFS']
+</pre>
+<p>etc.
+
+</p>
+<a name="Merging"></a><h3>Merging</h3>
+<p>To merge two <tt >WAD</tt >s <em>a</em> and <em>b</em>:
+</p>
+<pre> c = a + b
+</pre>
+<p>Note that (for efficiency reasons) this only copies references to lumps,
+which means that subsequent changes to lumps in <em>a</em> or <em>b</em> will affect the
+corresponding lumps in <em>c</em>. To give <em>c</em> its own set of lumps, do:
+
+</p>
+<pre> c = (a + b).copy()
+</pre>
+<p>When lumps in <em>a</em> and <em>b</em> have the same name,
+lumps from <em>b</em> will replace those from <em>a</em>.
+</p><p>It is also possible to merge individual sections:
+
+</p>
+<pre> a.sprites += b.sprites
+</pre>
+<p>Use with care for sections of different types.
+</p><p>Note that some sections do more than just copy over the list of lumps
+when they merge. For example, adding two <em>txdefs</em> sections together
+will automagically merge the <tt >TEXTURE1</tt >, <tt >TEXTURE2</tt > and <tt >PNAMES</tt > lumps. <tt >txdefs</tt >
+
+also get merged this way when two <tt >WAD</tt > objects are merged on the top level.
+</p>
+<a name="Lumps"></a><h2>Lumps</h2>
+<p>The <tt >Lump</tt > class holds a single lump. The class provides the following data and methods:
+</p>
+<pre> .data                      The lump's raw data as a string
+ .to_file(<em>filename</em>)         Save from a file
+ .from_file(<em>filename</em>)       Load from a file
+ .copy()                    Return a copy
+
+</pre>
+<p>Creating a new lump called 'FOOF' containing the text 'Hello!' and inserting it into a <tt >WAD</tt > <em>w</em> would be done as follows:
+</p>
+<pre> w.data['FOOF'] = Lump('Hello!')
+</pre>
+<a name="Graphic_lumps"></a><h3>Graphic lumps</h3>
+<p>There are subclasses of <tt >Lump</tt > for different types of lumps. Currently, only two of these provide special functionality: <tt >Graphic</tt > and <tt >Flat</tt >.
+
+</p><p><tt >Graphic</tt >, used to represent Doom format graphics, provides the following settable attributes:
+</p>
+<pre> .offsets              (x, y) offsets
+ .x_offset             x offset
+ .y_offset             y offset
+ .dimensions           (width, height)
+ .width                width in pixels
+ .height               height in pixels
+</pre>
+<p><tt >Graphic</tt > defines the following methods in adddition to those defined by <tt >Lump</tt >:
+</p>
+<pre> .from_raw             Load from a raw image
+ .to_raw               Return the image converted to raw pixels
+ .from_Image           Load from a PIL Image instance
+ .to_Image             Return the image converted to a PIL image
+ .translate            Translate to another palette
+</pre>
+<p>For the argument lists used by these functions, refer to the code and the inline documenation in lump.py.
+</p><p><tt >Flat</tt > works similarly to <tt >Graphic</tt >, but handles format conversions slightly differently.
+
+</p>
+<a name="Editors"></a><h2>Editors</h2>
+<p><em>Editors</em> are used to edit lumps or lump groups. They represent lump data with high-level objects and structures, and provide methods to modify the data. The following editors have been implemented so far:
+</p>
+<ul><li> <tt >Colormap</tt > for the COLORMAP lump
+</li><li> <tt >Playpal</tt > for the PLAYPAL lump
+</li><li> <tt >Textures</tt > for TEXTURE1/TEXTURE2/PNAMES
+
+</li><li> <tt >MapEditor</tt > for maps
+</li></ul>
+<p>All editors provide the following methods:
+</p>
+<pre>   .to_lump
+   .from_lump
+</pre>
+<p>or, if the editor represents more than one lump:
+</p>
+<pre>   .to_lumps
+   .from_lumps
+</pre>
+<p>In the latter case, the editor is initialized with a lump group instead of a single lump.
+</p>
+
+<a name="Map_editor"></a><h3>Map editor</h3>
+<p>Example (moving one vertex one unit):
+</p>
+<pre> m = MapEditor(wad.maps["E1M1"])
+ m.vertexes[103].x += 1
+ wad.maps["E1M1"] = m.to_lumps()
+</pre>
+<p>Refer to the source code for more information.</p>
+</body>
+</html>
