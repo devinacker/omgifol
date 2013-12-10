@@ -117,16 +117,28 @@ class MapEditor:
     def from_lumps(self, lumpgroup):
         """Load entries from a lump group."""
         m = lumpgroup
-        self.vertexes = self._unpack_lump(Vertex,    m["VERTEXES"].data)
-        self.sidedefs = self._unpack_lump(Sidedef,   m["SIDEDEFS"].data)
-        self.sectors  = self._unpack_lump(Sector,    m["SECTORS"].data)
-        self.things   = self._unpack_lump(Thing,     m["THINGS"].data)
-        self.linedefs = self._unpack_lump(Linedef,   m["LINEDEFS"].data)
-        self.ssectors = self._unpack_lump(SubSector, m["SSECTORS"].data)
-        self.segs     = self._unpack_lump(Seg,       m["SEGS"].data)
-        self.blockmap = m["BLOCKMAP"]
-        self.reject   = m["REJECT"]      # To be implemented
-        self.nodes    = m["NODES"]
+        try:
+            self.vertexes = self._unpack_lump(Vertex,    m["VERTEXES"].data)
+            self.sidedefs = self._unpack_lump(Sidedef,   m["SIDEDEFS"].data)
+            self.sectors  = self._unpack_lump(Sector,    m["SECTORS"].data)
+            self.things   = self._unpack_lump(Thing,     m["THINGS"].data)
+            self.linedefs = self._unpack_lump(Linedef,   m["LINEDEFS"].data)
+        except KeyError as e:
+            raise ValueError("map is missing %s lump" % e)
+        
+        try:
+            self.ssectors = self._unpack_lump(SubSector, m["SSECTORS"].data)
+            self.segs     = self._unpack_lump(Seg,       m["SEGS"].data)
+            self.blockmap = m["BLOCKMAP"]
+            self.reject   = m["REJECT"]
+            self.nodes    = m["NODES"]
+        except KeyError:
+            # nodes failed to build - we don't really care
+            self.ssectors = []
+            self.segs     = []
+            self.blockmap = []
+            self.reject   = []
+            self.nodes    = []
 
     def load_gl(self, mapobj):
         """Load GL nodes entries from a map"""
