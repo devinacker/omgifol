@@ -62,6 +62,41 @@ ZLinedef = make_struct(
    "block_all"]
 )
 
+# struct is 36 bytes
+# flags = ????
+# scraped this from the Yadex source. it's similar to the final
+# linedef format, but larger. some fields are (obviously) unknown but
+# (probably) not totally necessary.
+# no idea if the flags are valid here.
+AlphaLinedef = make_struct(
+  "Linedef", """Represents a map linedef (Doom alpha 0.4/0.5)""",
+  [["vx_a",   'h', -1],
+   ["vx_b",   'h', -1],
+   ["flags",  'h',  0],
+   ["dummy1", 'h',  0], #?
+   ["action", 'h',  0],
+   ["tag",    'h',  0],
+   
+   ["front",  'h', -1], # this is an unknown value in the original.
+                        # i'm reusing it to store sidedef 1
+   ["sector1", 'h', -1],
+   ["off_x1",  'h', -1],
+   ["tx_mid1", 'h', -1], # textures are numbered instead of named
+   ["tx_up1",  'h', -1],
+   ["tx_low1", 'h', -1],
+   
+   ["back",  'h', -1], # this is an unknown value in the original.
+                       # i'm reusing it to store sidedef 2
+   ["sector2", 'h', -1],
+   ["off_x2",  'h', -1],
+   ["tx_mid2", 'h', -1],
+   ["tx_up2",  'h', -1],
+   ["tx_low2", 'h', -1]],
+  ["impassable", "block_monsters", "two_sided",
+   "upper_unpeg", "lower_unpeg", "secret",
+   "block_sound", "invisible", "automap"]
+)
+
 Thing = make_struct(
   "Thing", """Represents a map thing""",
   [["x",     'h', 0],
@@ -89,6 +124,18 @@ ZThing = make_struct(
    ["arg5",   'b', 0]],
   ["easy", "medium", "hard", "deaf", "dormant",
    "fighter", "cleric", "mage", "solo", "multiplayer", "deathmatch"]
+)
+
+#12 bytes
+AlphaThing = make_struct(
+  "Thing", """Represents a map thing (Doom alpha 0.4/0.5)""",
+  [["x",     'h', 0],
+   ["y",     'h', 0],
+   ["angle", 'h', 0],
+   ["type",  'h', 0],
+   ["dummy", 'h', 0], # ?
+   ["flags", 'h', 0]],
+  ["easy", "medium", "hard", "deaf", "multiplayer"]
 )
 
 Sector = make_struct(
@@ -158,16 +205,40 @@ class MapEditor:
         """Load entries from a lump group."""
         m = lumpgroup
         try:
-            self.vertexes = self._unpack_lump(Vertex,    m["VERTEXES"].data)
-            self.sidedefs = self._unpack_lump(Sidedef,   m["SIDEDEFS"].data)
-            self.sectors  = self._unpack_lump(Sector,    m["SECTORS"].data)
-            
-            if "BEHAVIOR" in m: # Hexen / ZDoom map
-                self.things   = self._unpack_lump(ZThing,    m["THINGS"].data)
-                self.linedefs = self._unpack_lump(ZLinedef,  m["LINEDEFS"].data)
+            if "FLATNAME" in m: # alpha 0.4/0.5 map
+                self.vertexes = self._unpack_lump(Vertex,       m["POINTS"].data[4:])
+                self.linedefs = self._unpack_lump(AlphaLinedef, m["LINES"].data[4:])
+                self.sectors  = []
+                self.things   = self._unpack_lump(AlphaThing,   m["THINGS"].data[4:])
+                
+                self.sidedefs = []
+                #TODO: convert sectors
+                
+                # make sidedefs from linedefs using repurposed front/back fields
+                # TODO: do something about texture numbers (TEXTURES lump)
+                for line in self.linedefs:
+                    if line.sector1 >= 0:
+                        line.front = len(self.sidedefs)
+                        self.sidedefs.append(Sidedef(line.off_x1, 0, line.tx_up1, line.tx_low1, line.tx_mid1, line.sector1))
+                    else:
+                        line.front = -1
+                    
+                    if line.sector2 >= 0:
+                        line.back = len(self.sidedefs)
+                        self.sidedefs.append(Sidedef(line.off_x2, 0, line.tx_up2, line.tx_low2, line.tx_mid2, line.sector2))
+                    else:
+                        line.back = -1
             else:
-                self.things   = self._unpack_lump(Thing,     m["THINGS"].data)
-                self.linedefs = self._unpack_lump(Linedef,   m["LINEDEFS"].data)
+                self.vertexes = self._unpack_lump(Vertex,    m["VERTEXES"].data)
+                self.sidedefs = self._unpack_lump(Sidedef,   m["SIDEDEFS"].data)
+                self.sectors  = self._unpack_lump(Sector,    m["SECTORS"].data)
+                
+                if "BEHAVIOR" in m: # Hexen / ZDoom map
+                    self.things   = self._unpack_lump(ZThing,    m["THINGS"].data)
+                    self.linedefs = self._unpack_lump(ZLinedef,  m["LINEDEFS"].data)
+                else:
+                    self.things   = self._unpack_lump(Thing,     m["THINGS"].data)
+                    self.linedefs = self._unpack_lump(Linedef,   m["LINEDEFS"].data)
         except KeyError as e:
             raise ValueError("map is missing %s lump" % e)
         

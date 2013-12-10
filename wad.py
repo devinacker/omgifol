@@ -182,6 +182,8 @@ _maptail    = ['THINGS',   'LINEDEFS', 'SIDEDEFS', # Must be in order
                'VERTEXES', 'SEGS',     'SSECTORS',
                'NODES',    'SECTORS',  'REJECT',
                'BLOCKMAP', 'BEHAVIOR', 'SCRIPT*']
+_alphamapheaders = ['E?M?*']
+_alphamaptail = ['FLATNAME', 'POINTS', 'LINES', 'SECTORS', 'THINGS']
 _glmapheaders = ['GL_E?M?', 'GL_MAP??']
 _glmaptail    = ['GL_VERT', 'GL_SEGS', 'GL_SSECT', 'GL_NODES']
 _graphics     = ['TITLEPIC', 'CWILV*', 'WI*', 'M_*',
@@ -198,6 +200,7 @@ defstruct = [
     [MarkerGroup, 'flats',     Flat,    'F'],
     [MarkerGroup, 'colormaps', Lump,    'C'],
     [MarkerGroup, 'ztextures', Graphic, 'TX'],
+    [HeaderGroup, 'alphamaps', Lump, [_alphamapheaders, _alphamaptail]],
     [HeaderGroup, 'maps',   Lump, [_mapheaders, _maptail]],
     [HeaderGroup, 'glmaps', Lump, [_glmapheaders, _glmaptail]],
     [NameGroup,   'music',    Music, ['D_*']],
@@ -207,9 +210,8 @@ defstruct = [
     [NameGroup,   'data',     Lump,  ['*']]
 ]
 
-write_order = ['data', 'colormaps', 'maps', 'glmaps', 'txdefs',
-    'sounds', 'music', 'graphics', 'sprites', 'patches', 'flats',
-    'ztextures']
+write_order = ['data', 'colormaps', 'maps', 'alphamaps', 'glmaps', 'txdefs',
+    'sounds', 'music', 'graphics', 'sprites', 'patches', 'flats', 'ztextures']
 
 class WAD:
     """A memory-resident, abstract representation of a WAD file. Lumps
@@ -261,6 +263,9 @@ class WAD:
             raise TypeError, "Expected WadIO or file path string"
         for group in self.groups:
             group.load_wadio(w)
+        
+        # test: merge alphamaps into maps
+        self.maps += self.alphamaps
 
     def to_file(self, filename):
         """Save contents to a WAD file. Caution: if a file with the given name
