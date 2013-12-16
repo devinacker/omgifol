@@ -24,36 +24,38 @@ Sidedef = make_struct(
    ["tx_up",  '8s', "-"],
    ["tx_low", '8s', "-"],
    ["tx_mid", '8s', "-"],
-   ["sector", 'h',  -1 ]]
+   ["sector", 'H',  65535 ]]
 )
 
 Linedef = make_struct(
   "Linedef", """Represents a map linedef""",
-  [["vx_a",   'h', -1],
-   ["vx_b",   'h', -1],
-   ["flags",  'h',  0],
-   ["action", 'h',  0],
-   ["tag",    'h',  0],
-   ["front",  'h', -1],
-   ["back",   'h', -1]],
+  [["vx_a",   'H', 65535],
+   ["vx_b",   'H', 63335],
+   ["flags",  'H',  0],
+   ["action", 'H',  0],
+   ["tag",    'H',  0],
+   ["front",  'H', 63335],
+   ["back",   'H', 63335]],
   ["impassable", "block_monsters", "two_sided",
    "upper_unpeg", "lower_unpeg", "secret",
    "block_sound", "invisible", "automap"]
 )
 
+# TODO: update make_struct to support multi-bit flags somehow
+# so the action activation bits work better
 ZLinedef = make_struct(
   "Linedef", """Represents a map linedef (Hexen / ZDoom)""",
-  [["vx_a",   'h', -1],
-   ["vx_b",   'h', -1],
-   ["flags",  'h',  0],
-   ["action", 'b',  0],
-   ["arg1",   'b',  0],
-   ["arg2",   'b',  0],
-   ["arg3",   'b',  0],
-   ["arg4",   'b',  0],
-   ["arg5",   'b',  0],
-   ["front",  'h', -1],
-   ["back",   'h', -1]],
+  [["vx_a",   'H', 63335],
+   ["vx_b",   'H', 63335],
+   ["flags",  'H',  0],
+   ["action", 'B',  0],
+   ["arg0",   'B',  0],
+   ["arg1",   'B',  0],
+   ["arg2",   'B',  0],
+   ["arg3",   'B',  0],
+   ["arg4",   'B',  0],
+   ["front",  'H', 63335],
+   ["back",   'H', 63335]],
   ["impassable", "block_monsters", "two_sided",
    "upper_unpeg", "lower_unpeg", "secret",
    "block_sound", "invisible", "automap",
@@ -66,27 +68,27 @@ Thing = make_struct(
   "Thing", """Represents a map thing""",
   [["x",     'h', 0],
    ["y",     'h', 0],
-   ["angle", 'h', 0],
-   ["type",  'h', 0],
-   ["flags", 'h', 0]],
+   ["angle", 'H', 0],
+   ["type",  'H', 0],
+   ["flags", 'H', 0]],
   ["easy", "medium", "hard", "deaf", "multiplayer"]
 )
 
 ZThing = make_struct(
   "Thing", """Represents a map thing (Hexen / ZDoom)""",
-  [["tid",    'h', 0],
+  [["tid",    'H', 0],
    ["x",      'h', 0],
    ["y",      'h', 0],
    ["height", 'h', 0],
-   ["angle",  'h', 0],
-   ["type",   'h', 0],
-   ["flags",  'h', 0],
-   ["action", 'b', 0],
-   ["arg1",   'b', 0],
-   ["arg2",   'b', 0],
-   ["arg3",   'b', 0],
-   ["arg4",   'b', 0],
-   ["arg5",   'b', 0]],
+   ["angle",  'H', 0],
+   ["type",   'H', 0],
+   ["flags",  'H', 0],
+   ["action", 'B', 0],
+   ["arg0",   'B', 0],
+   ["arg1",   'B', 0],
+   ["arg2",   'B', 0],
+   ["arg3",   'B', 0],
+   ["arg4",   'B', 0]],
   ["easy", "medium", "hard", "deaf", "dormant",
    "fighter", "cleric", "mage", "solo", "multiplayer", "deathmatch"]
 )
@@ -97,34 +99,34 @@ Sector = make_struct(
    ["z_ceil",   'h',  128],
    ["tx_floor", '8s', "FLOOR4_8"],
    ["tx_ceil",  '8s', "CEIL3_5"],
-   ["light",    'h',  160],
-   ["type",     'h',  0],
-   ["tag",      'h',  0]]
+   ["light",    'H',  160],
+   ["type",     'H',  0],
+   ["tag",      'H',  0]]
 )
 
 Seg = make_struct(
   "Seg", """Represents a map seg""",
-  [["vx_a",   'h', 0],
-   ["vx_b",   'h', 0],
-   ["angle",  'h', 0],
-   ["line",   'h', 0],
-   ["side",   'h', 0],
-   ["offset", 'h', 0]]
+  [["vx_a",   'H', 0],
+   ["vx_b",   'H', 0],
+   ["angle",  'H', 0],
+   ["line",   'H', 0],
+   ["side",   'H', 0],
+   ["offset", 'H', 0]]
 )
 
 SubSector = make_struct(
   "SubSector", """Represents a map subsector""",
-  [["numsegs", 'h', 0],
+  [["numsegs", 'H', 0],
    ["seg_a",   'H', 0]]
 )
 
 GLSeg = make_struct(
   "GLSeg", """Represents a map GL seg""",
-  [["vx_a",    'h', 0],
-   ["vx_b",    'h', 0],
-   ["line",    'h', 0],
-   ["side",    'h', 0],
-   ["partner", 'h', 0]]
+  [["vx_a",    'H', 0],
+   ["vx_b",    'H', 0],
+   ["line",    'H', 0],
+   ["side",    'H', 0],
+   ["partner", 'H', 0]]
 )
 
 class MapEditor:
