@@ -11,6 +11,7 @@ This is Revenant's personal fork. What's new:
  - better handling of missing map data (including nodes)
  - better map loading (supports names other than ExMx and MAPxx,
    doesn't mistake MAPINFO for an actual map)
+ - better support for "limit removing" maps
  
 Some planned things:
 
