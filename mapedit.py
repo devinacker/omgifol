@@ -220,7 +220,7 @@ class MapEditor:
         try:
             m["BEHAVIOR"] = self.behavior
             m["SCRIPTS"]  = self.scripts
-        except KeyError:
+        except AttributeError:
             pass
         
         return m
