@@ -179,14 +179,16 @@ class MapEditor:
         except KeyError as e:
             raise ValueError("map is missing %s lump" % e)
         
+        from struct import error as StructError
         try:
             self.ssectors = self._unpack_lump(SubSector, m["SSECTORS"].data)
             self.segs     = self._unpack_lump(Seg,       m["SEGS"].data)
             self.blockmap = m["BLOCKMAP"]
             self.reject   = m["REJECT"]
             self.nodes    = m["NODES"]
-        except KeyError:
+        except (KeyError, StructError):
             # nodes failed to build - we don't really care
+            # TODO: this also "handles" (read: ignores) expanded zdoom nodes)
             self.ssectors = []
             self.segs     = []
             self.blockmap = []
