@@ -24,18 +24,18 @@ Sidedef = make_struct(
    ["tx_up",  '8s', "-"],
    ["tx_low", '8s', "-"],
    ["tx_mid", '8s', "-"],
-   ["sector", 'H',  0 ]]
+   ["sector", 'H',   0 ]]
 )
 
 Linedef = make_struct(
   "Linedef", """Represents a map linedef""",
-  [["vx_a",   'H', 0],
-   ["vx_b",   'H', 0],
+  [["vx_a",   'H',  0],
+   ["vx_b",   'H',  0],
    ["flags",  'H',  0],
    ["action", 'H',  0],
    ["tag",    'H',  0],
-   ["front",  'H', 0xFFFF],
-   ["back",   'H', 0xFFFF]],
+   ["front",  'H', -1],
+   ["back",   'H', -1]],
   ["impassable", "block_monsters", "two_sided",
    "upper_unpeg", "lower_unpeg", "secret",
    "block_sound", "invisible", "automap"]
@@ -45,8 +45,8 @@ Linedef = make_struct(
 # so the action activation bits work better
 ZLinedef = make_struct(
   "Linedef", """Represents a map linedef (Hexen / ZDoom)""",
-  [["vx_a",   'H', 0],
-   ["vx_b",   'H', 0],
+  [["vx_a",   'H',  0],
+   ["vx_b",   'H',  0],
    ["flags",  'H',  0],
    ["action", 'B',  0],
    ["arg0",   'B',  0],
@@ -54,8 +54,8 @@ ZLinedef = make_struct(
    ["arg2",   'B',  0],
    ["arg3",   'B',  0],
    ["arg4",   'B',  0],
-   ["front",  'H', 0xFFFF],
-   ["back",   'H', 0xFFFF]],
+   ["front",  'H', -1],
+   ["back",   'H', -1]],
   ["impassable", "block_monsters", "two_sided",
    "upper_unpeg", "lower_unpeg", "secret",
    "block_sound", "invisible", "automap",
@@ -179,6 +179,11 @@ class MapEditor:
         except KeyError as e:
             raise ValueError("map is missing %s lump" % e)
         
+        # use -1 for unused sidedefs instead of 0xFFFF
+        for line in self.linedefs:
+            if line.front == 0xFFFF: line.front = -1
+            if line.back  == 0xFFFF: line.back  = -1
+        
         from struct import error as StructError
         try:
             self.ssectors = self._unpack_lump(SubSector, m["SSECTORS"].data)
@@ -204,10 +209,17 @@ class MapEditor:
 
     def to_lumps(self):
         m = NameGroup()
+        
+        # change -1 to 0xFFFF so linedefs pack correctly
+        linedefs = self.linedefs[:]
+        for line in linedefs:
+            if line.front == -1: line.front = 0xFFFF
+            if line.back  == -1: line.back  = 0xFFFF
+        
         m["_HEADER_"] = Lump("")
         m["VERTEXES"] = Lump(join([x.pack() for x in self.vertexes]))
         m["THINGS"  ] = Lump(join([x.pack() for x in self.things  ]))
-        m["LINEDEFS"] = Lump(join([x.pack() for x in self.linedefs]))
+        m["LINEDEFS"] = Lump(join([x.pack() for x in linedefs     ]))
         m["SIDEDEFS"] = Lump(join([x.pack() for x in self.sidedefs]))
         m["SECTORS" ] = Lump(join([x.pack() for x in self.sectors ]))
         m["NODES"]    = self.nodes
@@ -261,8 +273,8 @@ class MapEditor:
             z = copy(line)
             z.vx_a += vlen
             z.vx_b += vlen
-            if z.front != 0xFFFF: z.front += ilen
-            if z.back != 0xFFFF: z.back += ilen
+            if z.front != -1: z.front += ilen
+            if z.back != -1: z.back += ilen
             self.linedefs.append(z)
         for side in other.sidedefs:
             z = copy(side)
