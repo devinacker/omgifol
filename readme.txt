@@ -9,10 +9,14 @@ This is Revenant's personal fork. What's new:
 
  - support for Hexen / ZDoom maps
  - better handling of missing map data (including nodes)
+ - better map loading (supports names other than ExMx and MAPxx,
+   doesn't mistake MAPINFO for an actual map)
  
 Some planned things:
 
- - better map loading (support names other than ExMx and MAPxx)
+ - UDMF map support
+ - Basic Doom 0.4 / 0.5 wad support in master
+ - Basic Doom 64 wad support
 
 The "doomalphas" branch contains extremely rudimentary loading of maps from the
 Doom 0.4 / 0.5 alphas. It was used to generate linedef animations for the

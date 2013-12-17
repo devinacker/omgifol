@@ -101,8 +101,7 @@ class HeaderGroup(LumpGroup):
     """Group for lumps arranged header-tail (e.g. maps)"""
 
     def __init2__(self):
-        self.headers = self.config[0]
-        self.tail = self.config[1]
+        self.tail = self.config
 
     def load_wadio(self, wadio):
         """Load all matching lumps that have not already
@@ -115,17 +114,17 @@ class HeaderGroup(LumpGroup):
                 continue
             name = wadio.entries[i].name
             added = False
-            for head in self.headers:
-                if wccmp(name, head):
-                    added = True
-                    self[name] = NameGroup()
+            # now search only using tail lumps so that any map with map lumps is loaded correctly
+            if i < numlumps - 1 and inwclist(wadio.entries[i + 1].name, self.tail):
+                added = True
+                self[name] = NameGroup()
+                wadio.entries[i].been_read = True
+                i += 1
+                while i < numlumps and inwclist(wadio.entries[i].name, self.tail):
+                    self[name][wadio.entries[i].name] = \
+                        self.lumptype(wadio.read(i))
                     wadio.entries[i].been_read = True
                     i += 1
-                    while i < numlumps and inwclist(wadio.entries[i].name, self.tail):
-                        self[name][wadio.entries[i].name] = \
-                            self.lumptype(wadio.read(i))
-                        wadio.entries[i].been_read = True
-                        i += 1
             if not added:
                 i += 1
 
@@ -177,12 +176,10 @@ class TxdefGroup(NameGroup):
 #
 
 # First some lists...
-_mapheaders = ['E?M?', 'MAP??*']
 _maptail    = ['THINGS',   'LINEDEFS', 'SIDEDEFS', # Must be in order
                'VERTEXES', 'SEGS',     'SSECTORS',
                'NODES',    'SECTORS',  'REJECT',
                'BLOCKMAP', 'BEHAVIOR', 'SCRIPT*']
-_glmapheaders = ['GL_E?M?', 'GL_MAP??']
 _glmaptail    = ['GL_VERT', 'GL_SEGS', 'GL_SSECT', 'GL_NODES']
 _graphics     = ['TITLEPIC', 'CWILV*', 'WI*', 'M_*',
                  'INTERPIC', 'BRDR*',  'PFUB?', 'ST*',
@@ -198,8 +195,8 @@ defstruct = [
     [MarkerGroup, 'flats',     Flat,    'F'],
     [MarkerGroup, 'colormaps', Lump,    'C'],
     [MarkerGroup, 'ztextures', Graphic, 'TX'],
-    [HeaderGroup, 'maps',   Lump, [_mapheaders, _maptail]],
-    [HeaderGroup, 'glmaps', Lump, [_glmapheaders, _glmaptail]],
+    [HeaderGroup, 'maps',   Lump, _maptail],
+    [HeaderGroup, 'glmaps', Lump, _glmaptail],
     [NameGroup,   'music',    Music, ['D_*']],
     [NameGroup,   'sounds',   Sound, ['DS*', 'DP*']],
     [TxdefGroup,  'txdefs',   Lump,  ['TEXTURE?', 'PNAMES']],
