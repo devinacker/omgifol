@@ -24,18 +24,18 @@ Sidedef = make_struct(
    ["tx_up",  '8s', "-"],
    ["tx_low", '8s', "-"],
    ["tx_mid", '8s', "-"],
-   ["sector", 'H',  65535 ]]
+   ["sector", 'H',  0 ]]
 )
 
 Linedef = make_struct(
   "Linedef", """Represents a map linedef""",
-  [["vx_a",   'H', 65535],
-   ["vx_b",   'H', 63335],
+  [["vx_a",   'H', 0],
+   ["vx_b",   'H', 0],
    ["flags",  'H',  0],
    ["action", 'H',  0],
    ["tag",    'H',  0],
-   ["front",  'H', 63335],
-   ["back",   'H', 63335]],
+   ["front",  'H', 0xFFFF],
+   ["back",   'H', 0xFFFF]],
   ["impassable", "block_monsters", "two_sided",
    "upper_unpeg", "lower_unpeg", "secret",
    "block_sound", "invisible", "automap"]
@@ -45,8 +45,8 @@ Linedef = make_struct(
 # so the action activation bits work better
 ZLinedef = make_struct(
   "Linedef", """Represents a map linedef (Hexen / ZDoom)""",
-  [["vx_a",   'H', 63335],
-   ["vx_b",   'H', 63335],
+  [["vx_a",   'H', 0],
+   ["vx_b",   'H', 0],
    ["flags",  'H',  0],
    ["action", 'B',  0],
    ["arg0",   'B',  0],
@@ -54,8 +54,8 @@ ZLinedef = make_struct(
    ["arg2",   'B',  0],
    ["arg3",   'B',  0],
    ["arg4",   'B',  0],
-   ["front",  'H', 63335],
-   ["back",   'H', 63335]],
+   ["front",  'H', 0xFFFF],
+   ["back",   'H', 0xFFFF]],
   ["impassable", "block_monsters", "two_sided",
    "upper_unpeg", "lower_unpeg", "secret",
    "block_sound", "invisible", "automap",
@@ -261,8 +261,8 @@ class MapEditor:
             z = copy(line)
             z.vx_a += vlen
             z.vx_b += vlen
-            if z.front != -1: z.front += ilen
-            if z.back != -1: z.back += ilen
+            if z.front != 0xFFFF: z.front += ilen
+            if z.back != 0xFFFF: z.back += ilen
             self.linedefs.append(z)
         for side in other.sidedefs:
             z = copy(side)
