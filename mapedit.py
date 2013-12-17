@@ -167,6 +167,12 @@ class MapEditor:
             if "BEHAVIOR" in m: # Hexen / ZDoom map
                 self.things   = self._unpack_lump(ZThing,    m["THINGS"].data)
                 self.linedefs = self._unpack_lump(ZLinedef,  m["LINEDEFS"].data)
+                
+                self.behavior = m["BEHAVIOR"].data
+                if "SCRIPTS" in m:
+                    self.scripts = m["SCRIPTS"].data
+                else:
+                    self.scripts = []
             else:
                 self.things   = self._unpack_lump(Thing,     m["THINGS"].data)
                 self.linedefs = self._unpack_lump(Linedef,   m["LINEDEFS"].data)
@@ -207,6 +213,14 @@ class MapEditor:
         m["SSECTORS"] = Lump(join([x.pack() for x in self.ssectors]))
         m["BLOCKMAP"] = self.blockmap
         m["REJECT"]   = self.reject
+        
+        # hexen / zdoom script lumps
+        try:
+            m["BEHAVIOR"] = self.behavior
+            m["SCRIPTS"]  = self.scripts
+        except KeyError:
+            pass
+        
         return m
 
     def draw_sector(self, vertexes, sector=None, sidedef=None):
