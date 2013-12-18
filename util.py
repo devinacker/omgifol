@@ -270,8 +270,9 @@ def _structdef(name, doc, fields, flags=None, init_exec=""):
     if flags:
         i = 1
         for f in flags:
-            flagdefs += _flagproperty % (f, i, f, i, ~i, f, f, f)
-            i <<= 1
+            if f is not None:
+                flagdefs += _flagproperty % (f, i, f, i, ~i, f, f, f)
+                i <<= 1
 
     if init_exec: init_exec += ";"
     init_exec += '; '.join("self.%s=%s" % (f[0], f[0]) for f in extra)
