@@ -18,6 +18,8 @@ Some planned things:
  - UDMF map support
  - Basic Doom 0.4 / 0.5 wad support in master
  - Basic Doom 64 wad support
+ - support for non-vanilla/Boom maps in lineinfo
+ - some stuff from AlexMax's fork
 
 The "doomalphas" branch contains extremely rudimentary loading of maps from the
 Doom 0.4 / 0.5 alphas. It was used to generate linedef animations for the
