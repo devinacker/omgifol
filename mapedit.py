@@ -44,7 +44,7 @@ Linedef = make_struct(
 # TODO: update make_struct to support multi-bit flags somehow
 # so the action activation bits work better
 ZLinedef = make_struct(
-  "Linedef", """Represents a map linedef (Hexen / ZDoom)""",
+  "ZLinedef", """Represents a map linedef (Hexen / ZDoom)""",
   [["vx_a",   'H',  0],
    ["vx_b",   'H',  0],
    ["flags",  'H',  0],
@@ -90,7 +90,7 @@ Thing = make_struct(
 )
 
 ZThing = make_struct(
-  "Thing", """Represents a map thing (Hexen / ZDoom)""",
+  "ZThing", """Represents a map thing (Hexen / ZDoom)""",
   [["tid",    'H', 0],
    ["x",      'h', 0],
    ["y",      'h', 0],
