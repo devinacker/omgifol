@@ -248,7 +248,7 @@ _flagproperty = '''
         return %s((self.%s >> %i) & %i)
     def set_%s(self, value):
         self.%s &= %i
-        if value is not None and isinstance(value, bool) or 0 <= value <= %i:
+        if value is not None and (isinstance(value, bool) or 0 <= value <= %i):
             self.%s |= (int(value) << %i)
         elif value:
             raise ValueError("%s must be between 0 and %i")
