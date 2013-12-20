@@ -41,8 +41,7 @@ Linedef = make_struct(
    "block_sound", "invisible", "automap"]
 )
 
-# TODO: update make_struct to support multi-bit flags somehow
-# so the action activation bits work better
+# TODO: an enum or something for triggers
 ZLinedef = make_struct(
   "ZLinedef", """Represents a map linedef (Hexen / ZDoom)""",
   [["vx_a",   'H',  0],
@@ -59,25 +58,9 @@ ZLinedef = make_struct(
   ["impassable", "block_monsters", "two_sided",
    "upper_unpeg", "lower_unpeg", "secret",
    "block_sound", "invisible", "automap",
-   "repeat", 
-   # line trigger flags - don't generate these attributes automatically
-   None, None, None,
+   "repeat", ("trigger", int, 3),
    "activate_any", None, "block_all"]
 )
-
-# cheap kludge to handle 3-bit linedef trigger type
-# TODO: an enum or something
-def zdoom_get_trigger(self):
-    return (self.flags >> 10) & 0x7
-def zdoom_set_trigger(self, value):
-	self.flags &= 0xE3FF
-	if value and value <= 0x7:
-		self.flags |= (value << 10)
-	elif value:
-		raise ValueError("invalid linedef trigger type")
-ZLinedef.get_trigger = zdoom_get_trigger
-ZLinedef.set_trigger = zdoom_set_trigger
-ZLinedef.trigger = property(ZLinedef.get_trigger, ZLinedef.set_trigger)
 
 Thing = make_struct(
   "Thing", """Represents a map thing""",

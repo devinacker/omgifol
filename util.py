@@ -245,14 +245,28 @@ Struct.__name__ = %(name)r
 # Template for struct flag property
 _flagproperty = '''
     def get_%s(self):
-        return bool(self.flags & %i)
+        return %s((self.%s >> %i) & %i)
     def set_%s(self, value):
-        if value:
-            self.flags |= %i
-        else:
-            self.flags &= %i
-    %s = property(get_%s, set_%s)
-''' 
+        self.%s &= %i
+        if value is not None and isinstance(value, bool) or 0 <= value <= %i:
+            self.%s |= (int(value) << %i)
+        elif value:
+            raise ValueError("%s must be between 0 and %i")
+    
+    %s = property(get_%s, set_%s)'''
+
+def make_property(name, bit, size=1, type=bool, var="flags"):
+    """Helper function for make_struct which defines properties based on
+    bit fields. This is called automatically for "flags" when passing a 
+    list of flags to make_struct, but can also be added to init_exec to
+    handle flags in other variables if needed."""
+    
+    getmask = (1 << size) - 1
+    setmask = 0xFFFF ^ (getmask << bit)
+    
+    return _flagproperty % (name, type.__name__, var, bit, getmask,
+                            name, var, setmask, getmask, var, bit, name, getmask,
+                            name, name, name)
 
 def _structdef(name, doc, fields, flags=None, init_exec=""):
     """Helper function for make_struct. Needed because Python doesn't
@@ -268,12 +282,21 @@ def _structdef(name, doc, fields, flags=None, init_exec=""):
     # properties for easy access to the 'flags' bit field
     flagdefs = ""
     if flags:
-        i = 1
+        i = 0
         for f in flags:
-            if f is not None:
-                flagdefs += _flagproperty % (f, i, f, i, ~i, f, f, f)
-                i <<= 1
-
+            if f is None:
+                i += 1
+                pass
+            elif isinstance(f, str):
+                flagdefs += make_property(f, i)
+                i += 1
+            elif isinstance(f, tuple) and len(f) == 3:
+                name, type, size = f
+                flagdefs += make_property(name, i, size, type)
+                i += size
+            else:
+                raise TypeError("flag must be a string (name), tuple (name, type, size), or None")
+    
     if init_exec: init_exec += ";"
     init_exec += '; '.join("self.%s=%s" % (f[0], f[0]) for f in extra)
 
