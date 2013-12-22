@@ -262,7 +262,7 @@ def make_property(name, bit, size=1, type=bool, var="flags"):
     handle flags in other variables if needed."""
     
     getmask = (1 << size) - 1
-    setmask = 0xFFFF ^ (getmask << bit)
+    setmask = 0xFFFFFFFF ^ (getmask << bit)
     
     return _flagproperty % (name, type.__name__, var, bit, getmask,
                             name, var, setmask, getmask, var, bit, name, getmask,

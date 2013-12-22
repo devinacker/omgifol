@@ -17,6 +17,12 @@ GLVertex = make_struct(
    ["y", "l", 0]]
 )
 
+Vertex64 = make_struct(
+  "Vertex64", """Represents a map vertex (Doom 64)""",
+  [["x", "l", 0],
+   ["y", "l", 0]]
+)
+
 Sidedef = make_struct(
   "Sidedef", """Represents a map sidedef""",
   [["off_x",  'h',  0  ],
@@ -25,6 +31,17 @@ Sidedef = make_struct(
    ["tx_low", '8s', "-"],
    ["tx_mid", '8s', "-"],
    ["sector", 'H',   0 ]]
+)
+
+#TODO : texture num<->name
+Sidedef64 = make_struct(
+  "Sidedef64", """Represents a map sidedef (Doom 64)""",
+  [["off_x",    'h',  0  ],
+   ["off_y",    'h',  0  ],
+   ["tx_up_n",  'H',  0  ],
+   ["tx_low_n", 'H',  0  ],
+   ["tx_mid_n", 'H',  0  ],
+   ["sector",   'H',   0 ]]
 )
 
 Linedef = make_struct(
@@ -62,6 +79,28 @@ ZLinedef = make_struct(
    "activate_any", None, "block_all"]
 )
 
+# TODO: special flags
+# (also verify meanings / good names of some flags)
+Linedef64 = make_struct(
+  "Linedef64", """Represents a map linedef (Doom 64)""",
+  [["vx_a",   'H',  0],
+   ["vx_b",   'H',  0],
+   ["flags",  'L',  0],
+   ["action", 'H',  0],
+   ["tag",    'H',  0],
+   ["front",  'H', -1],
+   ["back",   'H', -1]],
+  ["impassable", "block_monsters", "two_sided",
+   "upper_unpeg", "lower_unpeg", "secret",
+   "block_sound", "invisible", "automap",
+   "two_sided_midtex", "no_clip", "middle_unpeg",
+   "monster_trigger", "switch1", "switch2", "switch3",
+   "player_floor", "scroll_right", "scroll_left",
+   "scroll_up", "scroll_down", "blend_top", "blend_bottom",
+   "color_blend", "use_front", None, "reverse_color",
+   None, None, None, "wrap_horiz", "wrap_vert"]
+)
+
 Thing = make_struct(
   "Thing", """Represents a map thing""",
   [["x",     'h', 0],
@@ -91,6 +130,19 @@ ZThing = make_struct(
    "fighter", "cleric", "mage", "solo", "multiplayer", "deathmatch"]
 )
 
+Thing64 = make_struct(
+  "Thing64", """Represents a map thing (Doom 64)""",
+  [["x",     'h', 0],
+   ["y",     'h', 0],
+   ["z",     'h', 0],
+   ["angle", 'H', 0],
+   ["type",  'H', 0],
+   ["flags", 'H', 0]],
+  ["easy", "medium", "hard", "deaf", "multiplayer",
+   "spawn_on_trigger", "trigger_pickup", "trigger_death",
+   "secret", "no_infighting"]
+)
+
 Sector = make_struct(
   "Sector", """Represents a map sector""",
   [["z_floor",  'h',  0],
@@ -100,6 +152,26 @@ Sector = make_struct(
    ["light",    'H',  160],
    ["type",     'H',  0],
    ["tag",      'H',  0]]
+)
+
+# TODO: flat num<->name
+# TODO: int values for reverb / damage?
+Sector64 = make_struct(
+  "Sector64", """Represents a map sector (Doom 64)""",
+  [["z_floor",    'h',  0],
+   ["z_ceil",     'h',  128],
+   ["tx_floor_n", 'H',  0],
+   ["tx_ceil_n",  'H',  0],
+   # TODO: type?
+   ["color",    '10s',  ""],
+   ["light",      'H',  160],
+   ["type",       'H',  0],
+   ["tag",        'H',  0],
+   ["flags",      'H',  0]],
+  ["reverb", "reverb_more", "water", "light_sync",
+   "scroll_fast", "secret", ("damage", 3), "invisible",
+   "scroll_ceiling", "scroll_floor", "scroll_west",
+   "scroll_east", "scroll_north", "scroll_south"]
 )
 
 Seg = make_struct(
@@ -116,6 +188,20 @@ SubSector = make_struct(
   "SubSector", """Represents a map subsector""",
   [["numsegs", 'H', 0],
    ["seg_a",   'H', 0]]
+)
+
+##Leaf64 = make_struct(
+##  "Leaf64", """Represents a map subsector leaf (Doom 64)""",
+##  [["vx_a",  'H', 0],
+##   ["seg_a", 'H', 0xFFFF]]
+##)
+
+Light64 = make_struct(
+  "Light64", """Represents a map light color (Doom 64)""",
+  [["red",   'B', 255],
+   ["green", 'B', 255],
+   ["blue",  'B', 255],
+   ["tag",   'xH', 0]]
 )
 
 GLSeg = make_struct(
