@@ -58,7 +58,7 @@ ZLinedef = make_struct(
   ["impassable", "block_monsters", "two_sided",
    "upper_unpeg", "lower_unpeg", "secret",
    "block_sound", "invisible", "automap",
-   "repeat", ("trigger", int, 3),
+   "repeat", ("trigger", 3),
    "activate_any", None, "block_all"]
 )
 

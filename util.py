@@ -290,12 +290,12 @@ def _structdef(name, doc, fields, flags=None, init_exec=""):
             elif isinstance(f, str):
                 flagdefs += make_property(f, i)
                 i += 1
-            elif isinstance(f, tuple) and len(f) == 3:
-                name, type, size = f
-                flagdefs += make_property(name, i, size, type)
+            elif isinstance(f, tuple) and len(f) == 2:
+                name, size = f
+                flagdefs += make_property(name, i, size, int if size > 1 else bool)
                 i += size
             else:
-                raise TypeError("flag must be a string (name), tuple (name, type, size), or None")
+                raise TypeError("flag must be a string (name), tuple (name, size), or None")
     
     if init_exec: init_exec += ";"
     init_exec += '; '.join("self.%s=%s" % (f[0], f[0]) for f in extra)
