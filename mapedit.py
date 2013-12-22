@@ -162,8 +162,12 @@ Sector64 = make_struct(
    ["z_ceil",     'h',  128],
    ["tx_floor_n", 'H',  0],
    ["tx_ceil_n",  'H',  0],
-   # TODO: type?
-   ["color",    '10s',  ""],
+   # TODO: type / names
+   ["color0",     'H',  256],
+   ["color1",     'H',  256],
+   ["color2",     'H',  256],
+   ["color3",     'H',  256],
+   ["color4",     'H',  256],
    ["light",      'H',  160],
    ["type",       'H',  0],
    ["tag",        'H',  0],
