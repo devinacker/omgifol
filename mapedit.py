@@ -17,6 +17,7 @@ GLVertex = make_struct(
    ["y", "l", 0]]
 )
 
+# TODO: fixed <-> float
 Vertex64 = make_struct(
   "Vertex64", """Represents a map vertex (Doom 64)""",
   [["x", "l", 0],
@@ -134,10 +135,11 @@ Thing64 = make_struct(
   "Thing64", """Represents a map thing (Doom 64)""",
   [["x",     'h', 0],
    ["y",     'h', 0],
-   ["z",     'h', 0],
+   ["height",'h', 0],
    ["angle", 'H', 0],
    ["type",  'H', 0],
-   ["flags", 'H', 0]],
+   ["flags", 'H', 0],
+   ["tid",   'H', 0]],
   ["easy", "medium", "hard", "deaf", "multiplayer",
    "spawn_on_trigger", "trigger_pickup", "trigger_death",
    "secret", "no_infighting"]
@@ -168,7 +170,6 @@ Sector64 = make_struct(
    ["color2",     'H',  256],
    ["color3",     'H',  256],
    ["color4",     'H',  256],
-   ["light",      'H',  160],
    ["type",       'H',  0],
    ["tag",        'H',  0],
    ["flags",      'H',  0]],
@@ -248,11 +249,28 @@ class MapEditor:
         """Load entries from a lump group."""
         m = lumpgroup
         try:
-            self.vertexes = self._unpack_lump(Vertex,    m["VERTEXES"].data)
-            self.sidedefs = self._unpack_lump(Sidedef,   m["SIDEDEFS"].data)
-            self.sectors  = self._unpack_lump(Sector,    m["SECTORS"].data)
             
-            if "BEHAVIOR" in m: # Hexen / ZDoom map
+            if "LEAFS" in m:
+            #
+            # Doom 64 maps
+            #
+                self.vertexes = self._unpack_lump(Vertex64,  m["VERTEXES"].data)
+                self.sidedefs = self._unpack_lump(Sidedef64, m["SIDEDEFS"].data)
+                self.sectors  = self._unpack_lump(Sector64,  m["SECTORS"].data)
+                self.things   = self._unpack_lump(Thing64,   m["THINGS"].data)
+                self.linedefs = self._unpack_lump(Linedef64, m["LINEDEFS"].data)
+                
+                self.leafs    = m["LEAFS"].data
+                self.lights   = m["LINEDEFS"].data
+                self.macros   = m["MACROS"].data
+                
+            elif "BEHAVIOR" in m: 
+            #
+            # Hexen / ZDoom maps
+            #
+                self.vertexes = self._unpack_lump(Vertex,    m["VERTEXES"].data)
+                self.sidedefs = self._unpack_lump(Sidedef,   m["SIDEDEFS"].data)
+                self.sectors  = self._unpack_lump(Sector,    m["SECTORS"].data)
                 self.things   = self._unpack_lump(ZThing,    m["THINGS"].data)
                 self.linedefs = self._unpack_lump(ZLinedef,  m["LINEDEFS"].data)
                 
@@ -261,9 +279,17 @@ class MapEditor:
                     self.scripts = m["SCRIPTS"].data
                 else:
                     self.scripts = []
+                
             else:
+            #
+            # Vanilla / Boom maps
+            #
+                self.vertexes = self._unpack_lump(Vertex,    m["VERTEXES"].data)
+                self.sidedefs = self._unpack_lump(Sidedef,   m["SIDEDEFS"].data)
+                self.sectors  = self._unpack_lump(Sector,    m["SECTORS"].data)
                 self.things   = self._unpack_lump(Thing,     m["THINGS"].data)
                 self.linedefs = self._unpack_lump(Linedef,   m["LINEDEFS"].data)
+                
         except KeyError as e:
             raise ValueError("map is missing %s lump" % e)
         
@@ -320,6 +346,14 @@ class MapEditor:
         try:
             m["BEHAVIOR"] = self.behavior
             m["SCRIPTS"]  = self.scripts
+        except AttributeError:
+            pass
+        
+        # doom 64 lumps
+        try:
+            m["LEAFS"] = self.leafs
+            m["LIGHTS"] = self.lights
+            m["MACROS"] = self.macros
         except AttributeError:
             pass
         

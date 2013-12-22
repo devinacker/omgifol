@@ -125,11 +125,29 @@ class HeaderGroup(LumpGroup):
                         self.lumptype(wadio.read(i))
                     wadio.entries[i].been_read = True
                     i += 1
+                    
+            # try to load doom 64 maps that are in nested WADs,
+            # assuming Doom 64 maps always use MAP?? naming convention
+            # and contain "MAP01"
+            # (TODO: create a new NameGroup from contents)
+            elif inwclist(name, ["MAP??"]):
+                wad = wadio.read(i)
+                if wad[0:4] in ("IWAD", "PWAD"):
+                    added = True
+                    
+                    with open("_omg.tmp", mode="w+b") as t:
+                        t.write(wad)
+                    
+                    self[name] = copy(WAD("_omg.tmp").maps.values()[0])
+                    
+                    wadio.entries[i].been_read = True
+                
             if not added:
                 i += 1
 
     def save_wadio(self, wadio):
         """Save to a WadIO object."""
+        # TODO : correct saving of Doom 64 maps
         for h in self:
             hs = self[h]
             wadio.insert(h, "")
@@ -179,7 +197,8 @@ class TxdefGroup(NameGroup):
 _maptail    = ['THINGS',   'LINEDEFS', 'SIDEDEFS', # Must be in order
                'VERTEXES', 'SEGS',     'SSECTORS',
                'NODES',    'SECTORS',  'REJECT',
-               'BLOCKMAP', 'BEHAVIOR', 'SCRIPT*']
+               'BLOCKMAP', 'BEHAVIOR', 'SCRIPT*',
+               'LEAFS', 'LIGHTS', 'MACROS']
 _glmaptail    = ['GL_VERT', 'GL_SEGS', 'GL_SSECT', 'GL_NODES']
 _graphics     = ['TITLEPIC', 'CWILV*', 'WI*', 'M_*',
                  'INTERPIC', 'BRDR*',  'PFUB?', 'ST*',
