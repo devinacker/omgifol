@@ -149,6 +149,9 @@ class MapEditor:
             self.things   = []
             self.segs     = []
             self.ssectors = []
+            self.nodes    = []
+            self.blockmap = []
+            self.reject   = []
 
     def _unpack_lump(self, class_, data):
         s = class_._fmtsize
