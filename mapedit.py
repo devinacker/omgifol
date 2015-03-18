@@ -266,6 +266,13 @@ class MapEditor:
             match_existing = False
             for lc in self.linedefs:
                 if (self.compare_linedefs(new_linedef,lc) > 0):
+                    #remove midtexture and apply it to the upper/lower
+                    side.tx_low = self.sidedefs[lc.front].tx_mid
+                    side.tx_up = self.sidedefs[lc.front].tx_mid
+                    self.sidedefs[lc.front].tx_low = side.tx_mid
+                    self.sidedefs[lc.front].tx_up = side.tx_mid
+                    side.tx_mid = "-"
+                    self.sidedefs[lc.front].tx_mid = "-"
                     lc.back = len(self.sidedefs)-1
                     match_existing = True
                     break
