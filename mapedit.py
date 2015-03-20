@@ -260,6 +260,11 @@ class MapEditor:
                 self.things   = self._unpack_lump(Thing64,   m["THINGS"].data)
                 self.linedefs = self._unpack_lump(Linedef64, m["LINEDEFS"].data)
                 
+                # convert 16.16 fixed point coordinates
+                for v in self.vertexes:
+                    v.x /= 65536.0
+                    v.y /= 65536.0
+                
                 self.leafs    = m["LEAFS"].data
                 self.lights   = m["LINEDEFS"].data
                 self.macros   = m["MACROS"].data
@@ -330,8 +335,16 @@ class MapEditor:
             if line.front == -1: line.front = 0xFFFF
             if line.back  == -1: line.back  = 0xFFFF
         
+        # convert float -> fixed vertices for doom64
+        # TODO: better way to handle keeping track of format
+        vertexes = self.vertexes[:]
+        if len(vertexes) > 0 and isinstance(vertexes[0], Vertex64):
+            for v in vertexes:
+                v.x = int(v.x * 65536)
+                v.y = int(v.y * 65536)
+        
         m["_HEADER_"] = Lump("")
-        m["VERTEXES"] = Lump(join([x.pack() for x in self.vertexes]))
+        m["VERTEXES"] = Lump(join([x.pack() for x in vertexes     ]))
         m["THINGS"  ] = Lump(join([x.pack() for x in self.things  ]))
         m["LINEDEFS"] = Lump(join([x.pack() for x in linedefs     ]))
         m["SIDEDEFS"] = Lump(join([x.pack() for x in self.sidedefs]))
