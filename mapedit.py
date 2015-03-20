@@ -275,6 +275,8 @@ class MapEditor:
                     self.sidedefs[lc.front].tx_mid = "-"
                     lc.back = len(self.sidedefs)-1
                     match_existing = True
+                    lc.two_sided = True
+                    lc.impassable = False
                     break
             if (match_existing == False):
                 self.linedefs.append(new_linedef)
