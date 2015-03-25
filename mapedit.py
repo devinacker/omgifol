@@ -237,7 +237,7 @@ class MapEditor:
             pass
         
         return m
-
+    
     def draw_sector(self, vertexes, sector=None, sidedef=None):
         """Draw a polygon from a list of vertexes. The vertexes may be
         either Vertex objects or simple (x, y) tuples. A sector object
@@ -258,10 +258,98 @@ class MapEditor:
             side = copy(sidedef)
             side.sector = len(self.sectors)-1
             self.sidedefs.append(side)
-            self.linedefs.append(
-              Linedef(vx_a=firstv+((i+1)%len(vertexes)),
-              vx_b=firstv+i, front=firsts+i, flags=1))
-
+            
+            #check if the new line is being written over an existing
+            #and merge them if so.
+            new_linedef = Linedef(vx_a=firstv+((i+1)%len(vertexes)),
+                                  vx_b=firstv+i, front=firsts+i, flags=1)
+            match_existing = False
+            for lc in self.linedefs:
+                if (self.compare_linedefs(new_linedef,lc) > 0):
+                    #remove midtexture and apply it to the upper/lower
+                    side.tx_low = self.sidedefs[lc.front].tx_mid
+                    side.tx_up = self.sidedefs[lc.front].tx_mid
+                    self.sidedefs[lc.front].tx_low = side.tx_mid
+                    self.sidedefs[lc.front].tx_up = side.tx_mid
+                    side.tx_mid = "-"
+                    self.sidedefs[lc.front].tx_mid = "-"
+                    lc.back = len(self.sidedefs)-1
+                    match_existing = True
+                    lc.two_sided = True
+                    lc.impassable = False
+                    break
+            if (match_existing == False):
+                self.linedefs.append(new_linedef)
+    
+    def compare_vertex_positions(self,vertex1,vertex2):
+        """Compares the positions of two vertices."""
+        if (vertex1.x == vertex2.x):
+            if (vertex1.y == vertex2.y):
+                return True
+        return False
+    
+    def compare_linedefs(self,linedef1,linedef2):
+        """Compare the vertex positions of two linedefs.
+        Returns 0 for mismatch.
+        Returns 1 when the vertex positions are the same.
+        Returns 2 when the vertex positions are in the same order.
+        Returns 3 when the linedefs use the same vertices, but flipped.
+        Returns 4 when the linedefs use the exact same vertices."""
+        
+        if (linedef1.vx_a == linedef2.vx_a):
+            if (linedef1.vx_b == linedef2.vx_b):
+                return 4
+            
+        if (linedef1.vx_a == linedef2.vx_b):
+            if (linedef1.vx_b == linedef2.vx_a):
+                return 3
+        
+        if (self.compare_vertex_positions(self.vertexes[linedef1.vx_a],
+            self.vertexes[linedef2.vx_a])):
+            if (self.compare_vertex_positions(self.vertexes[linedef1.vx_b],
+                self.vertexes[linedef2.vx_b])):
+                return 2
+        
+        if (self.compare_vertex_positions(self.vertexes[linedef1.vx_a],
+            self.vertexes[linedef2.vx_b])):
+            if (self.compare_vertex_positions(self.vertexes[linedef1.vx_b],
+                self.vertexes[linedef2.vx_a])):
+                return 1
+        
+        return 0
+        
+    def compare_sectors(self,sect1,sect2):
+        """Compare two sectors' data and returns True when they match.
+        """
+        if (sect1.z_floor == sect2.z_floor and
+            sect1.z_ceil == sect2.z_ceil and
+            sect1.tx_floor == sect2.tx_floor and
+            sect1.tx_ceil == sect2.tx_ceil and
+            sect1.light == sect2.light and
+            sect1.type == sect2.type and
+            sect1.tag == sect2.tag):
+            return True
+        return False
+    
+    def combine_sectors(self,sector1,sector2,remove_linedefs=True):
+        """Combines two sectors together, replacing all references to
+        the second with the first. If remove_linedefs is true, any 
+        linedefs that connect the two sectors will be removed."""
+        for sd in self.sidedefs:
+            if (self.sectors[sd.sector] == sector2):
+                sd.sector = self.sectors.index(sector1)
+                
+                if (remove_linedefs):
+                    for lc in self.linedefs:
+                        if (lc.back != -1):
+                            if (self.sectors[self.sidedefs[lc.front].sector] == sector1 and 
+                                self.sectors[self.sidedefs[lc.back].sector] == sector1):
+                                self.linedefs.remove(lc)
+        # we can rely on a nodebuilder to remove unused sectors
+        # self.sectors[self.sectors.index(sector2)].tx_floor = "_REMOVED"
+        
+        
+        
     def paste(self, other, offset=(0,0)):
         """Insert content of another map."""
         vlen = len(self.vertexes)
