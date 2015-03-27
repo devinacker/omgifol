@@ -5,6 +5,8 @@ from omg.wad import NameGroup
 import omg.lineinfo as lineinfo
 import omg.thinginfo as thinginfo
 
+import math
+
 Vertex = make_struct(
   "Vertex", """Represents a map vertex""",
   [["x", "h", 0],
@@ -254,6 +256,9 @@ class MapEditor:
             else:
                 x, y = v.x, v.y
             self.vertexes.append(Vertex(x, y))
+        
+        new_lines = []
+            
         for i in range(len(vertexes)):
             side = copy(sidedef)
             side.sector = len(self.sectors)-1
@@ -263,23 +268,77 @@ class MapEditor:
             #and merge them if so.
             new_linedef = Linedef(vx_a=firstv+((i+1)%len(vertexes)),
                                   vx_b=firstv+i, front=firsts+i, flags=1)
+                                  
+            #first split the linedef at any existing vertexes
+            # for v in self.vertexes:
+                # if (self.check_vertex_on_linedef(new_linedef,v)):
+                    # self.linedefs.append(Linedef(vx_a=new_linedef.vx_a,
+                                                 # vx_b=self.vertexes.index(v),
+                                                 # front=firsts+i,
+                                                 # flags=1))
+                    # self.linedefs.append(Linedef(vx_b=new_linedef.vx_b,
+                                                 # vx_a=self.vertexes.index(v),
+                                                 # front=firsts+i,
+                                                 # flags=1))
+                    
+            
+            new_lines.append(new_linedef)
+            
+        #split_lines = []
+        for l in new_lines:
+            for v in self.vertexes:
+                if (self.check_vertex_on_linedef(l,v)):
+                    print("did one")
+                    nl = copy(l)
+                    l.vx_b = self.vertexes.index(v)
+                    nl.vx_a = self.vertexes.index(v)
+                    new_lines.append(nl)
+        #new_lines += split_lines
+        
+        
+        for l1 in new_lines:
             match_existing = False
-            for lc in self.linedefs:
-                if (self.compare_linedefs(new_linedef,lc) > 0):
+            for l2 in self.linedefs:
+                if (self.compare_linedefs(l1,l2) > 0):
                     #remove midtexture and apply it to the upper/lower
-                    side.tx_low = self.sidedefs[lc.front].tx_mid
-                    side.tx_up = self.sidedefs[lc.front].tx_mid
-                    self.sidedefs[lc.front].tx_low = side.tx_mid
-                    self.sidedefs[lc.front].tx_up = side.tx_mid
-                    side.tx_mid = "-"
-                    self.sidedefs[lc.front].tx_mid = "-"
-                    lc.back = len(self.sidedefs)-1
+                    front = self.sidedefs[l1.front]
+                    back = self.sidedefs[l2.front]
+                    front.tx_low = back.tx_mid
+                    front.tx_up = back.tx_mid
+                    back.tx_low = front.tx_mid
+                    back.tx_up = front.tx_mid
+                    front.tx_mid = "-"
+                    back.tx_mid = "-"
+                    l2.back = self.sidedefs.index(front)
+                    l2.two_sided = True
+                    l2.impassable = False
                     match_existing = True
-                    lc.two_sided = True
-                    lc.impassable = False
                     break
             if (match_existing == False):
-                self.linedefs.append(new_linedef)
+                self.linedefs.append(l1)
+
+    
+    def check_vertex_on_linedef(self,line,vertex):
+        """Checks if a vertex is on a linedef
+        
+        Does NOT return true if the vertex is equal to the ends."""
+        
+        a = self.vertexes[line.vx_a]
+        b = self.vertexes[line.vx_b]
+        c = vertex
+        
+        if (self.compare_vertex_positions(a,b)): return False
+        if (self.compare_vertex_positions(a,c)): return False
+        if (self.compare_vertex_positions(b,c)): return False
+        
+        def distance(i,j):
+            return math.sqrt((a.x - b.x)**2 + (a.y - b.y)**2)
+        
+        output = distance(a,c) + distance(c,b) == distance(a,b)
+        if (output == True): 
+            print(a.x,a.y,b.x,b.y,c.x,c.y)
+        
+        return output
     
     def compare_vertex_positions(self,vertex1,vertex2):
         """Compares the positions of two vertices."""
