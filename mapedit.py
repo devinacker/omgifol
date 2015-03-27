@@ -404,7 +404,8 @@ class MapEditor:
                             if (self.sectors[self.sidedefs[lc.front].sector] == sector1 and 
                                 self.sectors[self.sidedefs[lc.back].sector] == sector1):
                                 self.linedefs.remove(lc)
-        self.sectors[self.sectors.index(sector2)].tx_floor = "_REMOVED"
+        # we can rely on a nodebuilder to remove unused sectors
+        # self.sectors[self.sectors.index(sector2)].tx_floor = "_REMOVED"
         
         
         
