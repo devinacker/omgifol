@@ -264,43 +264,38 @@ class MapEditor:
             side.sector = len(self.sectors)-1
             self.sidedefs.append(side)
             
-            #check if the new line is being written over an existing
-            #and merge them if so.
             new_linedef = Linedef(vx_a=firstv+((i+1)%len(vertexes)),
                                   vx_b=firstv+i, front=firsts+i, flags=1)
                                   
-            #first split the linedef at any existing vertexes
-            # for v in self.vertexes:
-                # if (self.check_vertex_on_linedef(new_linedef,v)):
-                    # self.linedefs.append(Linedef(vx_a=new_linedef.vx_a,
-                                                 # vx_b=self.vertexes.index(v),
-                                                 # front=firsts+i,
-                                                 # flags=1))
-                    # self.linedefs.append(Linedef(vx_b=new_linedef.vx_b,
-                                                 # vx_a=self.vertexes.index(v),
-                                                 # front=firsts+i,
-                                                 # flags=1))
-                    
-            
             new_lines.append(new_linedef)
             
-        #split_lines = []
-        for l in new_lines:
-            for v in self.vertexes:
-                if (self.check_vertex_on_linedef(l,v)):
-                    print("did one")
-                    nl = copy(l)
-                    l.vx_b = self.vertexes.index(v)
-                    nl.vx_a = self.vertexes.index(v)
-                    new_lines.append(nl)
-        #new_lines += split_lines
+        #find overlapping lines and split them
         
+        def split_linedef(l,v):
+            if (self.check_vertex_on_linedef(l,self.vertexes[v])):
+                nl = copy(l)
+                l.vx_b = v
+                nl.vx_a = v
+                new_lines.append(nl)
+        
+        for l1 in new_lines:
+            for l2 in self.linedefs:
+                # if (self.check_vertex_on_linedef(l2,self.vertexes[l1.vx_a])):
+                    # split_linedef(l2,l1.vx_a)
+                # if (self.check_vertex_on_linedef(l2,self.vertexes[l1.vx_b])):
+                    # split_linedef(l2,l1.vx_b)
+                if (self.check_vertex_on_linedef(l1,self.vertexes[l2.vx_a])):
+                    split_linedef(l1,l2.vx_a)
+                if (self.check_vertex_on_linedef(l1,self.vertexes[l2.vx_b])):
+                    split_linedef(l1,l2.vx_b)
+                
         
         for l1 in new_lines:
             match_existing = False
             for l2 in self.linedefs:
                 if (self.compare_linedefs(l1,l2) > 0):
-                    #remove midtexture and apply it to the upper/lower
+                    #remove midtexture and apply it to the 
+                    #upper/lower texture
                     front = self.sidedefs[l1.front]
                     back = self.sidedefs[l2.front]
                     front.tx_low = back.tx_mid
@@ -312,11 +307,16 @@ class MapEditor:
                     l2.back = self.sidedefs.index(front)
                     l2.two_sided = True
                     l2.impassable = False
+                    l2.invisible = True
                     match_existing = True
                     break
             if (match_existing == False):
                 self.linedefs.append(l1)
 
+    def line_angle(self,line):
+        v1 = self.vertexes[line.vx_a]
+        v2 = self.vertexes[line.vx_b]
+        return math.atan2(v2.x-v1.x,v2.y-v1.y)
     
     def check_vertex_on_linedef(self,line,vertex):
         """Checks if a vertex is on a linedef
@@ -331,14 +331,12 @@ class MapEditor:
         if (self.compare_vertex_positions(a,c)): return False
         if (self.compare_vertex_positions(b,c)): return False
         
-        def distance(i,j):
-            return math.sqrt((a.x - b.x)**2 + (a.y - b.y)**2)
-        
-        output = distance(a,c) + distance(c,b) == distance(a,b)
-        if (output == True): 
-            print(a.x,a.y,b.x,b.y,c.x,c.y)
+        output = self.vertex_distance(a,c) + self.vertex_distance(c,b) == self.vertex_distance(a,b)
         
         return output
+    
+    def vertex_distance(self,i,j):
+        return math.sqrt((i.x - j.x)**2 + (i.y - j.y)**2)
     
     def compare_vertex_positions(self,vertex1,vertex2):
         """Compares the positions of two vertices."""
@@ -404,7 +402,8 @@ class MapEditor:
                             if (self.sectors[self.sidedefs[lc.front].sector] == sector1 and 
                                 self.sectors[self.sidedefs[lc.back].sector] == sector1):
                                 self.linedefs.remove(lc)
-        # we can rely on a nodebuilder to remove unused sectors
+        # we can rely on a nodebuilder to remove unused sectors for now
+        # TODO: not rely on a nodebuilder :)
         # self.sectors[self.sectors.index(sector2)].tx_floor = "_REMOVED"
         
         
