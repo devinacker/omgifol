@@ -272,22 +272,30 @@ class MapEditor:
         #find overlapping lines and split them
         
         def split_linedef(l,v):
-            if (self.check_vertex_on_linedef(l,self.vertexes[v])):
-                nl = copy(l)
-                l.vx_b = v
-                nl.vx_a = v
-                new_lines.append(nl)
+            #if (self.check_vertex_on_linedef(l,self.vertexes[v])):
+            nl = copy(l)
+            l.vx_b = v
+            nl.vx_a = v
+            new_lines.append(nl)
+
+        got_one = True
         
-        for l1 in new_lines:
-            for l2 in self.linedefs:
-                # if (self.check_vertex_on_linedef(l2,self.vertexes[l1.vx_a])):
-                    # split_linedef(l2,l1.vx_a)
-                # if (self.check_vertex_on_linedef(l2,self.vertexes[l1.vx_b])):
-                    # split_linedef(l2,l1.vx_b)
-                if (self.check_vertex_on_linedef(l1,self.vertexes[l2.vx_a])):
-                    split_linedef(l1,l2.vx_a)
-                if (self.check_vertex_on_linedef(l1,self.vertexes[l2.vx_b])):
-                    split_linedef(l1,l2.vx_b)
+        while(got_one == True):
+            got_one = False
+            for l1 in self.linedefs:
+                for l2 in new_lines:
+                    if (self.check_vertex_on_linedef(l2,self.vertexes[l1.vx_a])):
+                        split_linedef(l2,l1.vx_a)
+                        got_one = True
+                    if (self.check_vertex_on_linedef(l2,self.vertexes[l1.vx_b])):
+                        split_linedef(l2,l1.vx_b)
+                        got_one = True
+                    if (self.check_vertex_on_linedef(l1,self.vertexes[l2.vx_a])):
+                        split_linedef(l1,l2.vx_a)
+                        got_one = True
+                    if (self.check_vertex_on_linedef(l1,self.vertexes[l2.vx_b])):
+                        split_linedef(l1,l2.vx_b)
+                        got_one = True
                 
         
         for l1 in new_lines:
