@@ -9,7 +9,7 @@ class Colormap:
 
     def __init__(self, from_lump=None):
         """Create new, optionally from an existing lump."""
-        self.tables = [[0]*256]*34
+        self.tables = [[0 for x in range(256)] for y in range(34)]
         if from_lump:
             self.from_lump(from_lump)
 
@@ -47,5 +47,18 @@ class Colormap:
 
     def to_lump(self):
         """Pack to a COLORMAP lump."""
-        packed = [''.join([chr(c) for c in t]) for t in self.tables]
-        return omg.lump.Lump(''.join(packed))
+        
+        output = ""
+        for t in self.tables:
+            for c in t:
+                output += chr(c)
+                
+        return omg.lump.Lump(output)
+        
+        # packed = [''.join([chr(c) for c in t]) for t in self.tables]
+        # return omg.lump.Lump(''.join(packed))
+        
+    def set_position(self,table,index,pal_index):
+        """Sets a specified position in the colormap to the specified
+        index in the playpal"""
+        self.tables[table][index] = pal_index
