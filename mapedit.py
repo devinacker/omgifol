@@ -13,8 +13,8 @@ Vertex = make_struct(
 
 GLVertex = make_struct(
   "GLVertex", """Represents a map GL vertex""",
-  [["x", "l", 0],
-   ["y", "l", 0]]
+  [["x", "i", 0],
+   ["y", "i", 0]]
 )
 
 Sidedef = make_struct(
