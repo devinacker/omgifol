@@ -102,6 +102,24 @@ Sector = make_struct(
    ["tag",      'H',  0]]
 )
 
+Node = make_struct(
+  "Node", """Represents a BSP tree node""",
+  [["x_start",           'h', 0],
+   ["y_start",           'h', 0],
+   ["x_vector",          'h', 0],
+   ["y_vector",          'h', 0],
+   ["right_bbox_top",    'h', 0],
+   ["right_bbox_bottom", 'h', 0],
+   ["right_bbox_left",   'h', 0],
+   ["right_bbox_right",  'h', 0],
+   ["left_bbox_top",     'h', 0],
+   ["left_bbox_bottom",  'h', 0],
+   ["left_bbox_left",    'h', 0],
+   ["left_bbox_right",   'h', 0],
+   ["right_index",       'H', 0],
+   ["left_index",        'H', 0]]
+)
+
 Seg = make_struct(
   "Seg", """Represents a map seg""",
   [["vx_a",   'H', 0],
@@ -149,7 +167,7 @@ class MapEditor:
             self.things   = []
             self.segs     = []
             self.ssectors = []
-            self.nodes    = Lump("")
+            self.nodes    = []
             self.blockmap = Lump("")
             self.reject   = Lump("")
 
@@ -191,7 +209,7 @@ class MapEditor:
             self.segs     = self._unpack_lump(Seg,       m["SEGS"].data)
             self.blockmap = m["BLOCKMAP"]
             self.reject   = m["REJECT"]
-            self.nodes    = m["NODES"]
+            self.nodes    = self._unpack_lump(Node,      m["NODES"].data)
         except (KeyError, StructError):
             # nodes failed to build - we don't really care
             # TODO: this also "handles" (read: ignores) expanded zdoom nodes)
@@ -223,7 +241,7 @@ class MapEditor:
         m["LINEDEFS"] = Lump(join([x.pack() for x in linedefs     ]))
         m["SIDEDEFS"] = Lump(join([x.pack() for x in self.sidedefs]))
         m["SECTORS" ] = Lump(join([x.pack() for x in self.sectors ]))
-        m["NODES"]    = self.nodes
+        m["NODES"]    = Lump(join([x.pack() for x in self.nodes   ]))
         m["SEGS"]     = Lump(join([x.pack() for x in self.segs    ]))
         m["SSECTORS"] = Lump(join([x.pack() for x in self.ssectors]))
         m["BLOCKMAP"] = self.blockmap
