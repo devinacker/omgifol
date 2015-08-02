@@ -1,4 +1,4 @@
-import re
+import re, sys
 from itertools import tee
 
 class Symbol:
@@ -18,7 +18,7 @@ class Lexer:
     textpos = 0
 
     re_identifier = re.compile(r'[A-Za-z_]+[A-Za-z0-9_]*')
-    re_integer = re.compile(r'[+-]?[1-9]+[0-9]*|0[0-9]+|0x[0-9A-Fa-f]+')
+    re_integer = re.compile(r'[+-]?[0-9]+[0-9]*|0[0-9]+|0x[0-9A-Fa-f]+')
     re_float = re.compile(r'[+-]?[0-9]+\.[0-9]*([eE][+-]?[0-9]+)?')
     re_string = re.compile('"((?:[^"\\\\]|\\\\.)*)"')
 
@@ -108,6 +108,18 @@ class Lexer:
             if char == ' ' or char == '\r' or char == '\n':
                 self.textpos += 1
                 continue
+
+            # Skip comments
+            if char == '/':
+                nextchar = self.textmap[self.textpos + 1:self.textpos + 2]
+                if nextchar == '/':
+                    found = self.textmap.find('\n', self.textpos)
+                    self.textpos += found - self.textpos + 1
+                    continue
+                elif nextchar == '*':
+                    found = self.textmap.find('*/', self.textpos)
+                    self.textpos += found - self.textpos + 1
+                    continue
 
             # We're at our next symbol.
             break
