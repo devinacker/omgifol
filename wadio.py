@@ -5,15 +5,15 @@ Header = make_struct(
   "Header",
   """Class for WAD file headers""",
   [["type",    '4s', "PWAD"],
-   ["dir_len", 'l',  0     ],
-   ["dir_ptr", 'l',  12    ]]
+   ["dir_len", 'i',  0     ],
+   ["dir_ptr", 'i',  12    ]]
 )
 
 Entry = make_struct(
   "Entry",
   """Class for WAD entries""",
-  [["ptr",       'l',  0 ],
-   ["size",      'l',  0 ],
+  [["ptr",       'i',  0 ],
+   ["size",      'i',  0 ],
    ["name",      '8s', ""],
    ["been_read", 'x',  False]]   # Used by WAD loader
 )

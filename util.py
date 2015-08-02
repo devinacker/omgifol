@@ -200,11 +200,11 @@ def pack16(n):
 
 def unpack32(s):
     """Convert a packed signed long (4 bytes) to a Python int"""
-    return unpack('l', s)[0]
+    return unpack('i', s)[0]
 
 def pack32(n):
     """Convert a Python int to a packed signed long (4 bytes)"""
-    return pack('l', n)
+    return pack('i', n)
 
 
 #----------------------------------------------------------------------

@@ -6,10 +6,10 @@ TextureDef = make_struct(
   "TextureDef",
   """Class for texture definitions""",
   [["name",     '8s', "-"],
-   ["dummy1",   'l',  0  ],
+   ["dummy1",   'i',  0  ],
    ["width",    'h',  0  ],
    ["height",   'h',  0  ],
-   ["dummy2",   'l',  0  ],
+   ["dummy2",   'i',  0  ],
    ["npatches", 'h',  0  ]],
   init_exec = "self.patches = []"
 )
@@ -62,8 +62,8 @@ class Textures(OrderedDict):
 
         # Unpack TEXTURE1
         data = texture1.data
-        numtextures = unpack('l', data[0:4])[0]
-        pointers = unpack('l'*numtextures, data[4:4+numtextures*4])
+        numtextures = unpack('i', data[0:4])[0]
+        pointers = unpack('i'*numtextures, data[4:4+numtextures*4])
         for ptr in pointers:
             texture = TextureDef(bytes=data[ptr:ptr+22])
             for pptr in range(ptr+22, ptr+22+10*texture.npatches, 10):
