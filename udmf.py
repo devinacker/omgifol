@@ -1,4 +1,4 @@
-import re, sys
+import re
 from itertools import tee
 
 class Symbol:
@@ -185,15 +185,15 @@ class Parser:
         self.global_expr_list()
 
     def global_expr_list(self):
+        while True:
+            self.global_expr()
 
-        self.global_expr()
-
-        if self.token[0] == Symbol.identifier:
-            self.global_expr_list()
-        elif self.token[0] == Symbol.eof:
-            return
-        else:
-            raise Exception("expected identifier or EOF")
+            if self.token[0] == Symbol.identifier:
+                continue
+            elif self.token[0] == Symbol.eof:
+                return
+            else:
+                raise Exception("expected identifier or EOF")
 
     def global_expr(self):
         # Look ahead one symbol and see if we have a valid block or
@@ -223,9 +223,12 @@ class Parser:
         self.consume()
 
     def expr_list(self):
-        self.assignment_expr()
-        if self.token[0] == Symbol.identifier:
-            self.expr_list()
+        while True:
+            self.assignment_expr()
+            if self.token[0] == Symbol.identifier:
+                continue
+            else:
+                return
 
     def assignment_expr(self):
         if self.token[0] != Symbol.identifier:
