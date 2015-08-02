@@ -20,7 +20,8 @@ class Lexer:
     re_identifier = re.compile(r'[A-Za-z_]+[A-Za-z0-9_]*')
     re_integer = re.compile(r'[+-]?[0-9]+[0-9]*|0[0-9]+|0x[0-9A-Fa-f]+')
     re_float = re.compile(r'[+-]?[0-9]+\.[0-9]*([eE][+-]?[0-9]+)?')
-    re_string = re.compile('"((?:[^"\\\\]|\\\\.)*)"')
+    re_string = re.compile(r'"((?:[^"\\]|\\.)*)"')
+    re_keyword = re.compile('[^{}();"\'\n\t ]+')
 
     def scan(self):
         token = ''
@@ -57,18 +58,24 @@ class Lexer:
 
             # Check for complex terminals
 
+            # Unknown keywords.  If this is the longest match, we use
+            # this instead of any of the below tokens.
+            uktoken = self.ukeyword()
+
             # A number can be a float or an integer, so check for
             # floats first because doing things the opposite way can
             # result in a truncated float as an integer.
             token, value = self.float()
             if token != False:
-                yield (Symbol.float, value)
-                continue
+                if uktoken == False or len(token) >= len(uktoken):
+                    yield (Symbol.float, value)
+                    continue
 
             token, value = self.integer()
             if token != False:
-                yield (Symbol.integer, value)
-                continue
+                if uktoken == False or len(token) >= len(uktoken):
+                    yield (Symbol.integer, value)
+                    continue
 
             # Quoted strings
             token, value = self.string()
@@ -76,21 +83,17 @@ class Lexer:
                 yield (Symbol.string, value)
                 continue
 
-            # Keywords
-            token = self.keyword("true")
-            if token != False:
-                yield (Symbol.keyword, True)
-                continue
-
-            token = self.keyword("false")
-            if token != False:
-                yield (Symbol.keyword, False)
-                continue
-
             # Idenfitiers
             token = self.identifier()
             if token != False:
-                yield (Symbol.identifier, token)
+                if uktoken == False or len(token) >= len(uktoken):
+                    yield (Symbol.identifier, token)
+                    continue
+
+            # Unknown keyword, last resort
+            if uktoken != False:
+                token = uktoken
+                yield (Symbol.keyword, token)
                 continue
 
             raise Exception("invalid syntax")
@@ -105,7 +108,7 @@ class Lexer:
             char = self.textmap[self.textpos:self.textpos + 1]
 
             # Skip whitespace.
-            if char == ' ' or char == '\r' or char == '\n':
+            if char == ' ' or char == '\t' or char == '\r' or char == '\n':
                 self.textpos += 1
                 continue
 
@@ -135,6 +138,13 @@ class Lexer:
     def keyword(self, string):
         if self.textmap[self.textpos:self.textpos + len(string)] == string:
             return string
+        else:
+            return False
+
+    def ukeyword(self):
+        match = self.re_keyword.match(self.textmap[self.textpos:])
+        if match:
+            return match.group(0)
         else:
             return False
 
@@ -259,6 +269,11 @@ class Parser:
             return
 
         if self.token[0] == Symbol.keyword:
+            self.consume()
+            return
+
+        # An identifier is a subset of a keyword.
+        if self.token[0] == Symbol.identifier:
             self.consume()
             return
 
