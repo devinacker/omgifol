@@ -62,20 +62,13 @@ ZLinedef = make_struct(
    "block_all"]
 )
 
-# struct is 36 bytes
-# flags = ????
-# scraped this from the Yadex source. it's similar to the final
-# linedef format, but larger. some fields are (obviously) unknown but
-# (probably) not totally necessary.
-# no idea if the flags are valid here.
+# http://www.doomworld.com/vb/post/1404752
 AlphaLinedef = make_struct(
-  "Linedef", """Represents a map linedef (Doom alpha 0.4/0.5)""",
+  "Linedef", """Represents a map linedef (Doom alpha 0.3)""",
   [["vx_a",   'h', -1],
    ["vx_b",   'h', -1],
    ["flags",  'h',  0],
    ["dummy1", 'h',  0], #?
-   ["action", 'h',  0],
-   ["tag",    'h',  0],
    
    ["front",  'h', -1], # this is an unknown value in the original.
                         # i'm reusing it to store sidedef 1
