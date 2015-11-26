@@ -4,7 +4,7 @@
 # in installing PIL just to pass this line if not interested in using the
 # graphics functionality at all.
 try:
-    import Image, ImageDraw, ImageOps
+    from PIL import Image, ImageDraw, ImageOps
 except:
     pass
 
