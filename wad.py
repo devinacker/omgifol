@@ -224,7 +224,7 @@ class WAD:
 
     Member data:
         .structure     Structure definition.
-        .palette       Palette (not implemented yet)
+        .palette       Palette
         .sprites, etc  Sections containing lumps, as specified by
                        the structure definition"""
 

@@ -31,7 +31,7 @@ class Palette:
     def __init__(self, colors=None, tran_index=None, tran_color=None):
 
         """Creates a new Palette object. The 'colors' argument may be
-        either a list of (r,g,b) tuples or an RGBRGBRGB... string/bytearray.
+        either a list of (r,g,b) tuples or an RGBRGBRGB... string/bytes.
         'tran_index' specifies the index in the palette where the 
         transparent color should be placed. Note that this is only used
         when saving images, and thus doesn't affect color lookups.
@@ -44,12 +44,12 @@ class Palette:
         if isinstance(colors, list):
             self.colors = colors[:]
         elif isinstance(colors, str):
-            _colors = bytearray(colors, 'utf-8', 'ignore')
+            _colors = bytes(colors, 'utf-8', 'ignore')
             self.colors = [unpack('BBB', _colors[i:i+3]) for i in range(0,768,3)]
-        elif isinstance(colors, bytearray):
+        elif isinstance(colors, bytes):
             self.colors = [unpack('BBB', colors[i:i+3]) for i in range(0,768,3)]
         else:
-            raise TypeError("Argument 'colors' must be list or string or bytearray")
+            raise TypeError("Argument 'colors' must be list or string or bytes")
 
         # Doom graphics don't actually use indices for transparency; the
         # following data is only used when converting between image formats.
