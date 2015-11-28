@@ -173,7 +173,7 @@ class MapEditor:
 
     def _unpack_lump(self, class_, data):
         s = class_._fmtsize
-        return [class_(bytes=data[i:i+s]) for i in xrange(0,len(data),s)]
+        return [class_(bytes=data[i:i+s]) for i in range(0,len(data),s)]
 
     def from_lumps(self, lumpgroup):
         """Load entries from a lump group."""

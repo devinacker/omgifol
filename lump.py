@@ -17,7 +17,7 @@ class Lump(object):
     """Basic lump class. Instances of Lump (and its subclasses)
     always have the following:
 
-        .data       -- a string holding the lump's data
+        .data       -- a bytes object holding the lump's data
         .from_file  -- load the data to a file
         .to_file    -- save the data to a file
 
@@ -30,11 +30,11 @@ class Lump(object):
         """Create a new instance. The `data` parameter may be a string
         representing data for the lump. The `source` parameter may be
         a path to a file or a file-like object to load from."""
-        self.data = ""
+        self.data = bytes()
         if issubclass(type(data), Lump):
             self.data = data.data
         elif data is not None:
-            self.data = data or ""
+            self.data = data or bytes()
         if from_file:
             self.from_file(from_file)
 
@@ -135,8 +135,8 @@ class Graphic(Lump):
             data.append('\xff')
             pointer += 1
         # Merge everything together
-        self.data = ''.join([pack('4h', width, height, x_offset, y_offset),
-                    ''.join(columnptrs), ''.join(data)])
+        self.data = bytes().join([pack('4h', width, height, x_offset, y_offset),
+                    bytes().join(columnptrs), bytes().join(data)])
 
     def to_raw(self, tran_index=None):
         """Returns self converted to a raw (8-bpp) image.
@@ -149,7 +149,7 @@ class Graphic(Lump):
         tran_index = tran_index or self.palette.tran_index
         output = [chr(tran_index)] * (width*height)
         pointers = unpack('%il'%width, data[8 : 8 + width*4])
-        for x in xrange(width):
+        for x in range(width):
             pointer = pointers[x]
             while data[pointer] != '\xff':
                 post_length = ord(data[pointer+1])
@@ -215,7 +215,7 @@ class Graphic(Lump):
                         pixels = pixels.replace(chr(ri//3),
                             chr(self.palette.tran_index))
         else:
-            raise TypeError, "image mode must be 'P' or 'RGB'"
+            raise TypeError("image mode must be 'P' or 'RGB'")
 
         self.from_raw(pixels, width, height, xoff, yoff, self.palette)
 
@@ -275,7 +275,7 @@ class Flat(Graphic):
         if sz == 4160: return (64, 65)
         root = int(sz**0.5)
         if root**2 != sz:
-            raise TypeError, "unable to determine size: not a square number"
+            raise TypeError("unable to determine size: not a square number")
         return (root, root)
 
     dimensions = property(get_dimensions)
