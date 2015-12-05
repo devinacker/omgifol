@@ -1,4 +1,5 @@
-from struct  import pack, unpack
+from six      import PY2, PY3
+from struct   import pack, unpack
 from omg.util import *
 
 class Palette:
@@ -43,10 +44,10 @@ class Palette:
 
         if isinstance(colors, list):
             self.colors = colors[:]
-        elif isinstance(colors, str):
+        elif PY3 and isinstance(colors, str):
             _colors = bytes(colors, 'utf-8', 'ignore')
             self.colors = [unpack('BBB', _colors[i:i+3]) for i in range(0,768,3)]
-        elif isinstance(colors, bytes):
+        elif (PY2 and isinstance(colors, str)) or isinstance(colors, bytes):
             self.colors = [unpack('BBB', colors[i:i+3]) for i in range(0,768,3)]
         else:
             raise TypeError("Argument 'colors' must be list or string or bytes")

@@ -155,7 +155,7 @@ for c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789[]\\_-":
     _trans_table[ord(c.lower())] = c
     _trans_table[ord(c)] = c
 _trans_table[0] = "\0"
-_trans_table = bytes("".join(_trans_table), 'ascii')
+_trans_table = "".join(_trans_table)
 
 def zpad(chars):
     """Pad a string with zero bytes, up until a length of 8.
@@ -169,12 +169,12 @@ def zstrip(chars):
     return chars
 
 def safe_name(chars):
-    return chars[:8].translate(_trans_table)
+    return str(chars)[:8].translate(_trans_table)
 
 def fixname(chars):
     if '\0' in str(chars):
         chars = chars[:chars.index("\0")]
-    chars = chars.translate(_trans_table)
+    chars = str(chars).translate(_trans_table)
     return chars
 
 def fixpadname(chars):

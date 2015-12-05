@@ -11,7 +11,7 @@ except:
 import os
 import omg.palette
 from omg.util import *
-
+import six
 
 class Lump(object):
     """Basic lump class. Instances of Lump (and its subclasses)
@@ -147,26 +147,26 @@ class Graphic(Lump):
         data = self.data
         width, height = self.dimensions
         tran_index = tran_index or self.palette.tran_index
-        output = [chr(tran_index)] * (width*height)
+        output = bytearray([tran_index] * (width*height))
         pointers = unpack('%il'%width, data[8 : 8 + width*4])
         for x in range(width):
             pointer = pointers[x]
-            while data[pointer] != '\xff':
-                post_length = ord(data[pointer+1])
-                op = ord(data[pointer])*width + x
+            while six.indexbytes(data, pointer) != 0xff:
+                post_length = six.indexbytes(data, pointer+1)
+                op = six.indexbytes(data, pointer)*width + x
                 for p in range(pointer + 3, pointer + post_length + 3):
-                    output[op] = data[p]
+                    output[op] = six.indexbytes(data, p)
                     op += width
                 pointer += post_length + 4
-        return join(output)
+        return bytes(output)
 
     def to_Image(self):
         """Convert to a PIL Image instance"""
         im = Image.new('P', self.dimensions, None)
         if isinstance(self, Flat):
-            im.fromstring(self.data)
+            im.frombytes(self.data)
         else:
-            im.fromstring(self.to_raw())
+            im.frombytes(self.to_raw())
         im.putpalette(self.palette.save_bytes)
         return im
 
@@ -191,16 +191,16 @@ class Graphic(Lump):
         elif im.mode == 'P':
             srcpal = im.palette.tostring()
             if translate:
-                R = [ord(c) for c in srcpal[0::3]]
-                G = [ord(c) for c in srcpal[1::3]]
-                B = [ord(c) for c in srcpal[2::3]]
+                R = [c for c in srcpal[0::3]]
+                G = [c for c in srcpal[1::3]]
+                B = [c for c in srcpal[2::3]]
                 # Work around PIL bug: "RGB" loads as "BGR" from bmps (?)
                 if filename[-4:].lower() == '.bmp':
                     srcpal = zip(B, G, R)
                 else:
                     srcpal = zip(R, G, B)
                 lexicon = [chr(self.palette.match(c)) for c in srcpal]
-                pixels = join([lexicon[ord(b)] for b in pixels])
+                pixels = join([lexicon[b] for b in pixels])
             else:
                 # Simply copy pixels. However, make sure to translate
                 # all colors matching the transparency color to the
@@ -257,11 +257,11 @@ class Graphic(Lump):
         lexicon = [chr(pal.match(self.palette.colors[i])) for i in range(256)]
         lexicon[self.palette.tran_index] = chr(pal.tran_index)
         if isinstance(self, Flat):
-            self.data = join([lexicon[ord(b)] for b in self.data])
+            self.data = join([lexicon[b] for b in self.data])
         else:
             raw = self.to_raw()
             #raw = raw.replace(chr(self.palette.tran_index), chr(pal.tran_index))
-            self.load_raw(join([lexicon[ord(b)] for b in raw]),
+            self.load_raw(join([lexicon[b] for b in raw]),
                 self.width, self.height,
                 self.x_offset, self.y_offset)
 
