@@ -241,7 +241,7 @@ class Graphic(Lump):
         respectively. However, .raw ignores this parameter and always
         writes in palette mode."""
 
-        format = os.path.splitext(filename)[1:][0].replace('.', '').upper()
+        format = os.path.splitext(filename)[1][1:].upper()
         if   format == 'LMP': writefile(filename, self.data)
         elif format == 'RAW': writefile(filename, self.to_raw())
         else:
