@@ -312,7 +312,7 @@ def _structdef(name, doc, fields, flags=None, init_exec=""):
     #           self.foo = zstrip(safe_name(self.foo))
     unpackexpr =  ', '.join('self.'+f[0] for f in fields)
     unpackexpr += (" = unpack(%r, bytes); " % fmt)
-    unpackexpr += "; ".join("self.%s=zstrip(safe_name(self.%s.decode('ascii')))" % \
+    unpackexpr += "; ".join("self.%s=zstrip(safe_name(self.%s.decode('ascii', 'ignore')))" % \
         (f[0], f[0]) for f in fields if 's' in f[1])
 
     # example:  self.x=x; self.y=y; self.foo=foo
