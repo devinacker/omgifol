@@ -82,15 +82,15 @@ class Graphic(Lump):
 
     def get_offsets(self):
         """Retrieve the (x, y) offsets of the graphic."""
-        return unpack('hh', self.data[4:8])
+        return unpack('<hh', self.data[4:8])
 
     def set_offsets(self, xy):
         """Set the (x, y) offsets of the graphic."""
-        self.data = self.data[0:4] + pack('hh', *xy) + self.data[8:]
+        self.data = self.data[0:4] + pack('<hh', *xy) + self.data[8:]
 
     def get_dimensions(self):
         """Retrieve the (width, height) dimensions of the graphic."""
-        return unpack('hh', self.data[0:4])
+        return unpack('<hh', self.data[0:4])
 
     offsets = property(get_offsets, set_offsets)
     x_offset = property(lambda self: self.offsets[0],
@@ -128,14 +128,14 @@ class Graphic(Lump):
         columnptrs = []
         pointer = 4*width + 8
         for column in columns_out:
-            columnptrs.append(pack('l', pointer))
+            columnptrs.append(pack('<i', pointer))
             for row, pixels in column:
                 data.append("%c%c\x00%s\x00" % (row, len(pixels), pixels))
                 pointer += 4 + len(pixels)
             data.append('\xff')
             pointer += 1
         # Merge everything together
-        self.data = ''.join([pack('4h', width, height, x_offset, y_offset),
+        self.data = ''.join([pack('<4h', width, height, x_offset, y_offset),
                     ''.join(columnptrs), ''.join(data)])
 
     def to_raw(self, tran_index=None):
@@ -148,7 +148,7 @@ class Graphic(Lump):
         width, height = self.dimensions
         tran_index = tran_index or self.palette.tran_index
         output = [chr(tran_index)] * (width*height)
-        pointers = unpack('%il'%width, data[8 : 8 + width*4])
+        pointers = unpack('<%ii'%width, data[8 : 8 + width*4])
         for x in xrange(width):
             pointer = pointers[x]
             while data[pointer] != '\xff':

@@ -62,12 +62,12 @@ class Textures(OrderedDict):
 
         # Unpack TEXTURE1
         data = texture1.data
-        numtextures = unpack('i', data[0:4])[0]
-        pointers = unpack('i'*numtextures, data[4:4+numtextures*4])
+        numtextures = unpack('<i', data[0:4])[0]
+        pointers = unpack('<%ii'%numtextures, data[4:4+numtextures*4])
         for ptr in pointers:
             texture = TextureDef(bytes=data[ptr:ptr+22])
             for pptr in range(ptr+22, ptr+22+10*texture.npatches, 10):
-                x, y, idn = unpack('hhh', data[pptr:pptr+6])
+                x, y, idn = unpack('<hhh', data[pptr:pptr+6])
                 texture.patches.append(PatchDef(x, y, name=pnames[idn]))
             self[texture.name] = texture
 
