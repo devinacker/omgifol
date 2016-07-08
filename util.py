@@ -193,19 +193,19 @@ def fix_loading_name(name):
 
 def unpack16(s):
     """Convert a packed signed short (2 bytes) to a Python int"""
-    return unpack('h', s)[0]
+    return unpack('<h', s)[0]
 
 def pack16(n):
     """Convert a Python int to a packed signed short (2 bytes)"""
-    return pack('h', n)
+    return pack('<h', n)
 
 def unpack32(s):
     """Convert a packed signed long (4 bytes) to a Python int"""
-    return unpack('i', s)[0]
+    return unpack('<i', s)[0]
 
 def pack32(n):
     """Convert a Python int to a packed signed long (4 bytes)"""
-    return pack('i', n)
+    return pack('<i', n)
 
 
 #----------------------------------------------------------------------
@@ -281,7 +281,7 @@ def _structdef(name, doc, fields, flags=None, init_exec=""):
     extra  = [f for f in fields if f[1] == 'x']
     fields = [f for f in fields if f[1] != 'x']
 
-    fmt = "".join(f[1] for f in fields)
+    fmt = "<" + "".join(f[1] for f in fields)
     fmtsize = calcsize(fmt)
 
     # properties for easy access to the 'flags' bit field
