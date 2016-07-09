@@ -7,6 +7,7 @@ from __future__ import print_function
 from fnmatch    import fnmatchcase as wccmp
 from struct     import pack, unpack, calcsize
 from copy       import copy, deepcopy
+import six
 
 _pack = pack
 _unpack = unpack
@@ -160,8 +161,8 @@ _trans_table = "".join(_trans_table)
 def zpad(chars):
     """Pad a string with zero bytes, up until a length of 8.
     The string is truncated if longer than 8 bytes."""
-    return pack('8s', bytes(str(chars), 'ascii'))
-
+    return pack('8s', six.b(chars))
+    
 def zstrip(chars):
     """Strip all data following the first zero in the string"""
     if '\0' in str(chars):
@@ -332,7 +333,6 @@ def _structdef(name, doc, fields, flags=None, init_exec=""):
     # print(s.replace("Struct", name))
     return compile(s, "<struct>", "exec")
 
-# TODO : make this work on python3
 def make_struct(*args, **kwargs):
     """Create a Struct class according to the given format"""
     namespace = {}

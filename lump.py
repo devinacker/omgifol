@@ -180,7 +180,7 @@ class Graphic(Lump):
         from the input image. To properly translate colors between
         palettes, set the `translate` parameter."""
 
-        pixels = im.tostring()
+        pixels = im.tobytes()
         width, height = im.size
         # High resolution graphics not supported yet, so truncate
         height = min(254, height)
@@ -189,11 +189,11 @@ class Graphic(Lump):
             pixels = join([chr(self.palette.match(unpack('BBB', \
                 pixels[i*3:(i+1)*3]))) for i in range(width*height)])
         elif im.mode == 'P':
-            srcpal = im.palette.tostring()
+            srcpal = im.palette.tobytes()
             if translate:
-                R = [c for c in srcpal[0::3]]
-                G = [c for c in srcpal[1::3]]
-                B = [c for c in srcpal[2::3]]
+                R = [c for c in srcpal[0::4]]
+                G = [c for c in srcpal[1::4]]
+                B = [c for c in srcpal[2::4]]
                 # Work around PIL bug: "RGB" loads as "BGR" from bmps (?)
                 if filename[-4:].lower() == '.bmp':
                     srcpal = zip(B, G, R)
@@ -207,12 +207,12 @@ class Graphic(Lump):
                 # right index. This is necessary because programs
                 # aren't consistent in choice of position for the
                 # transparent entry.
-                packed_color = pack("BBB", *pal.tran_color)
+                packed_color = pack("BBB", *self.palette.tran_color)
                 ri = 0
                 while ri != -1:
-                    ri = srcpal.find(packed_color, ri+3)
-                    if not ri % 3 and ri//3 != self.palette.tran_index:
-                        pixels = pixels.replace(chr(ri//3),
+                    ri = srcpal.find(packed_color, ri+4)
+                    if not ri % 4 and ri//4 != self.palette.tran_index:
+                        pixels = pixels.replace(chr(ri//4),
                             chr(self.palette.tran_index))
         else:
             raise TypeError("image mode must be 'P' or 'RGB'")
