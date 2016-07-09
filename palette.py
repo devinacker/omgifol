@@ -1,4 +1,4 @@
-from six      import PY2, PY3
+import six
 from struct   import pack, unpack
 from omg.util import *
 
@@ -42,12 +42,12 @@ class Palette:
         tran_index = tran_index or default_tran_index
         tran_color = tran_color or default_tran_color
 
+        if isinstance(colors, str):
+            colors = six.b(colors)
+
         if isinstance(colors, list):
             self.colors = colors[:]
-        elif PY3 and isinstance(colors, str):
-            _colors = bytes(colors, 'utf-8', 'ignore')
-            self.colors = [unpack('BBB', _colors[i:i+3]) for i in range(0,768,3)]
-        elif (PY2 and isinstance(colors, str)) or isinstance(colors, bytes):
+        elif isinstance(colors, bytes):
             self.colors = [unpack('BBB', colors[i:i+3]) for i in range(0,768,3)]
         else:
             raise TypeError("Argument 'colors' must be list or string or bytes")

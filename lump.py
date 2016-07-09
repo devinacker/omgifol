@@ -106,18 +106,17 @@ class Graphic(Lump):
         """Load a raw 8-bpp image, converting to the Doom picture format
         (used by all graphics except flats)"""
         pal = pal or omg.palette.default
-        trans = chr(pal.tran_index)
         # First pass: extract pixel data in column+post format
         columns_in = [data[n:width*height:width] for n in range(width)]
         columns_out = []
         for column in columns_in:
             # Split into chunks of continuous non-transparent pixels
-            postdata = filter(None, column.split(trans))
+            postdata = filter(None, column.split(six.int2byte(pal.tran_index)))
             # Find the y position where each chunk starts
             start_rows = []
             in_trans = True
             for y in range(height):
-                if column[y] == trans:
+                if column[y] == pal.tran_index:
                     in_trans = True
                 elif in_trans:
                     start_rows.append(y)
@@ -130,9 +129,9 @@ class Graphic(Lump):
         for column in columns_out:
             columnptrs.append(pack('<i', pointer))
             for row, pixels in column:
-                data.append("%c%c\x00%s\x00" % (row, len(pixels), pixels))
+                data.append(b"%c%c\x00%s\x00" % (row, len(pixels), pixels))
                 pointer += 4 + len(pixels)
-            data.append('\xff')
+            data.append(b'\xff')
             pointer += 1
         # Merge everything together
         self.data = bytes().join([pack('<4h', width, height, x_offset, y_offset),
