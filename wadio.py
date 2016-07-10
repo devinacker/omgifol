@@ -74,6 +74,10 @@ class WadIO:
         if openfrom is not None:
             self.open(openfrom)
 
+    def __del__(self):
+        if self.basefile:
+            self.basefile.close()
+
     def open(self, filename):
         """Open a WAD file, create a new file if none exists at the path."""
         assert not self.entries
