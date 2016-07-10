@@ -215,8 +215,8 @@ class Graphic(Lump):
                 while ri != -1:
                     ri = srcpal.find(packed_color, ri+palsize)
                     if not ri % palsize and ri//palsize != self.palette.tran_index:
-                        pixels = pixels.replace(chr(ri//palsize),
-                            chr(self.palette.tran_index))
+                        pixels = pixels.replace(six.int2byte(ri//palsize),
+                            six.int2byte(self.palette.tran_index))
         else:
             raise TypeError("image mode must be 'P' or 'RGB'")
 
