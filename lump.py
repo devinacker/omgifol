@@ -116,7 +116,7 @@ class Graphic(Lump):
             start_rows = []
             in_trans = True
             for y in range(height):
-                if column[y] == pal.tran_index:
+                if six.indexbytes(column, y) == pal.tran_index:
                     in_trans = True
                 elif in_trans:
                     start_rows.append(y)
@@ -189,17 +189,21 @@ class Graphic(Lump):
                 pixels[i*3:(i+1)*3]))) for i in range(width*height)])
         elif im.mode == 'P':
             srcpal = im.palette.tobytes()
+            if im.palette.mode == "RGB":
+                palsize = 3
+            elif im.palette.mode == "RGBA":
+                palsize = 4
+            else:
+                raise TypeError("palette mode must be 'RGB' or 'RGBA'")
+            
             if translate:
-                R = [c for c in srcpal[0::4]]
-                G = [c for c in srcpal[1::4]]
-                B = [c for c in srcpal[2::4]]
-                # Work around PIL bug: "RGB" loads as "BGR" from bmps (?)
-                if filename[-4:].lower() == '.bmp':
-                    srcpal = zip(B, G, R)
-                else:
-                    srcpal = zip(R, G, B)
-                lexicon = [chr(self.palette.match(c)) for c in srcpal]
-                pixels = join([lexicon[b] for b in pixels])
+                R = [c for c in six.iterbytes(srcpal[0::palsize])]
+                G = [c for c in six.iterbytes(srcpal[1::palsize])]
+                B = [c for c in six.iterbytes(srcpal[2::palsize])]
+
+                srcpal = zip(R, G, B)
+                lexicon = [six.int2byte(self.palette.match(c)) for c in srcpal]
+                pixels = join([lexicon[b] for b in six.iterbytes(pixels)])
             else:
                 # Simply copy pixels. However, make sure to translate
                 # all colors matching the transparency color to the
@@ -209,9 +213,9 @@ class Graphic(Lump):
                 packed_color = pack("BBB", *self.palette.tran_color)
                 ri = 0
                 while ri != -1:
-                    ri = srcpal.find(packed_color, ri+4)
-                    if not ri % 4 and ri//4 != self.palette.tran_index:
-                        pixels = pixels.replace(chr(ri//4),
+                    ri = srcpal.find(packed_color, ri+palsize)
+                    if not ri % palsize and ri//palsize != self.palette.tran_index:
+                        pixels = pixels.replace(chr(ri//palsize),
                             chr(self.palette.tran_index))
         else:
             raise TypeError("image mode must be 'P' or 'RGB'")
