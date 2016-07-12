@@ -7,7 +7,7 @@ from __future__ import print_function
 from fnmatch    import fnmatchcase as wccmp
 from struct     import pack, unpack, calcsize
 from copy       import copy, deepcopy
-import six
+from omg        import six
 
 _pack = pack
 _unpack = unpack

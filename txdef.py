@@ -1,7 +1,7 @@
 from omg.lump import Lump
 from omg.util import *
-from omg.wad import TxdefGroup
-from omg import six
+from omg.wad  import TxdefGroup
+from omg      import six
 
 TextureDef = make_struct(
   "TextureDef",

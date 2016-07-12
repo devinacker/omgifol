@@ -1,4 +1,4 @@
-import six
+from omg      import six
 from struct   import pack, unpack
 from omg.util import *
 

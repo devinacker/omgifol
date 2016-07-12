@@ -1,6 +1,6 @@
 import omg.palette
 import omg.lump
-import six
+from omg import six
 
 class Colormap:
     """An editor for Doom's COLORMAP lump. The colormap holds 34 tables

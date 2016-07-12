@@ -11,7 +11,7 @@ except:
 import os
 import omg.palette
 from omg.util import *
-import six
+from omg      import six
 
 class Lump(object):
     """Basic lump class. Instances of Lump (and its subclasses)
