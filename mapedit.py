@@ -5,8 +5,6 @@ from omg.wad import NameGroup
 import omg.lineinfo as lineinfo
 import omg.thinginfo as thinginfo
 
-import math
-
 Vertex = make_struct(
   "Vertex", """Represents a map vertex""",
   [["x", "h", 0],
@@ -149,7 +147,6 @@ GLSeg = make_struct(
 
 class MapEditor:
     """Doom map editor
-
     Data members:
         vertexes      List containing Vertex objects
         sidedefs      List containing Sidedef objects
@@ -274,95 +271,32 @@ class MapEditor:
             else:
                 x, y = v.x, v.y
             self.vertexes.append(Vertex(x, y))
-        
-        new_lines = []
-            
         for i in range(len(vertexes)):
             side = copy(sidedef)
             side.sector = len(self.sectors)-1
             self.sidedefs.append(side)
             
+            #check if the new line is being written over an existing
+            #and merge them if so.
             new_linedef = Linedef(vx_a=firstv+((i+1)%len(vertexes)),
                                   vx_b=firstv+i, front=firsts+i, flags=1)
-                                  
-            new_lines.append(new_linedef)
-            
-        #find overlapping lines and split them
-        
-        def split_linedef(l,v):
-            #if (self.check_vertex_on_linedef(l,self.vertexes[v])):
-            nl = copy(l)
-            l.vx_b = v
-            nl.vx_a = v
-            new_lines.append(nl)
-
-        got_one = True
-        
-        while(got_one == True):
-            got_one = False
-            for l1 in self.linedefs:
-                for l2 in new_lines:
-                    if (self.check_vertex_on_linedef(l2,self.vertexes[l1.vx_a])):
-                        split_linedef(l2,l1.vx_a)
-                        got_one = True
-                    if (self.check_vertex_on_linedef(l2,self.vertexes[l1.vx_b])):
-                        split_linedef(l2,l1.vx_b)
-                        got_one = True
-                    if (self.check_vertex_on_linedef(l1,self.vertexes[l2.vx_a])):
-                        split_linedef(l1,l2.vx_a)
-                        got_one = True
-                    if (self.check_vertex_on_linedef(l1,self.vertexes[l2.vx_b])):
-                        split_linedef(l1,l2.vx_b)
-                        got_one = True
-                
-        
-        for l1 in new_lines:
             match_existing = False
-            for l2 in self.linedefs:
-                if (self.compare_linedefs(l1,l2) > 0):
-                    #remove midtexture and apply it to the 
-                    #upper/lower texture
-                    front = self.sidedefs[l1.front]
-                    back = self.sidedefs[l2.front]
-                    front.tx_low = back.tx_mid
-                    front.tx_up = back.tx_mid
-                    back.tx_low = front.tx_mid
-                    back.tx_up = front.tx_mid
-                    front.tx_mid = "-"
-                    back.tx_mid = "-"
-                    l2.back = self.sidedefs.index(front)
-                    l2.two_sided = True
-                    l2.impassable = False
-                    l2.invisible = True
+            for lc in self.linedefs:
+                if (self.compare_linedefs(new_linedef,lc) > 0):
+                    #remove midtexture and apply it to the upper/lower
+                    side.tx_low = self.sidedefs[lc.front].tx_mid
+                    side.tx_up = self.sidedefs[lc.front].tx_mid
+                    self.sidedefs[lc.front].tx_low = side.tx_mid
+                    self.sidedefs[lc.front].tx_up = side.tx_mid
+                    side.tx_mid = "-"
+                    self.sidedefs[lc.front].tx_mid = "-"
+                    lc.back = len(self.sidedefs)-1
                     match_existing = True
+                    lc.two_sided = True
+                    lc.impassable = False
                     break
             if (match_existing == False):
-                self.linedefs.append(l1)
-
-    def line_angle(self,line):
-        v1 = self.vertexes[line.vx_a]
-        v2 = self.vertexes[line.vx_b]
-        return math.atan2(v2.x-v1.x,v2.y-v1.y)
-    
-    def check_vertex_on_linedef(self,line,vertex):
-        """Checks if a vertex is on a linedef
-        
-        Does NOT return true if the vertex is equal to the ends."""
-        
-        a = self.vertexes[line.vx_a]
-        b = self.vertexes[line.vx_b]
-        c = vertex
-        
-        if (self.compare_vertex_positions(a,b)): return False
-        if (self.compare_vertex_positions(a,c)): return False
-        if (self.compare_vertex_positions(b,c)): return False
-        
-        output = self.vertex_distance(a,c) + self.vertex_distance(c,b) == self.vertex_distance(a,b)
-        
-        return output
-    
-    def vertex_distance(self,i,j):
-        return math.sqrt((i.x - j.x)**2 + (i.y - j.y)**2)
+                self.linedefs.append(new_linedef)
     
     def compare_vertex_positions(self,vertex1,vertex2):
         """Compares the positions of two vertices."""
@@ -428,8 +362,7 @@ class MapEditor:
                             if (self.sectors[self.sidedefs[lc.front].sector] == sector1 and 
                                 self.sectors[self.sidedefs[lc.back].sector] == sector1):
                                 self.linedefs.remove(lc)
-        # we can rely on a nodebuilder to remove unused sectors for now
-        # TODO: not rely on a nodebuilder :)
+        # we can rely on a nodebuilder to remove unused sectors
         # self.sectors[self.sectors.index(sector2)].tx_floor = "_REMOVED"
         
         
@@ -461,4 +394,3 @@ class MapEditor:
             z.x += offset[0]
             z.y += offset[1]
             self.things.append(z)
-
