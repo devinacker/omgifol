@@ -92,9 +92,9 @@ class MarkerGroup(LumpGroup):
         """Save to a WadIO object."""
         if len(self) == 0:
             return
-        wadio.insert(self.prefix.replace('*', ''), '')
+        wadio.insert(self.prefix.replace('*', ''), bytes())
         LumpGroup.save_wadio(self, wadio)
-        wadio.insert(self.suffix.replace('*', ''), '')
+        wadio.insert(self.suffix.replace('*', ''), bytes())
 
 
 class HeaderGroup(LumpGroup):
@@ -132,7 +132,7 @@ class HeaderGroup(LumpGroup):
         """Save to a WadIO object."""
         for h in self:
             hs = self[h]
-            wadio.insert(h, "")
+            wadio.insert(h, bytes())
             for t in self.tail:
                 if t in hs:
                     wadio.insert(t, hs[t].data)
@@ -224,7 +224,7 @@ class WAD:
 
     Member data:
         .structure     Structure definition.
-        .palette       Palette (not implemented yet)
+        .palette       Palette
         .sprites, etc  Sections containing lumps, as specified by
                        the structure definition"""
 
@@ -255,7 +255,7 @@ class WAD:
             assert os.path.exists(source)
             w = WadIO(source)
         else:
-            raise TypeError, "Expected WadIO or file path string"
+            raise TypeError("Expected WadIO or file path string")
         for group in self.groups:
             group.load_wadio(w)
 

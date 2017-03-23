@@ -1,4 +1,5 @@
 from omg.lump import Lump
+from omg.util import *
 import omg.palette
 
 class Playpal:

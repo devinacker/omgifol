@@ -3,9 +3,11 @@
     by other Omgifol modules.
 """
 
-from fnmatch import fnmatchcase as wccmp
-from struct  import pack, unpack, calcsize
-from copy    import copy, deepcopy
+from __future__ import print_function
+from fnmatch    import fnmatchcase as wccmp
+from struct     import pack, unpack, calcsize
+from copy       import copy, deepcopy
+from omg        import six
 
 _pack = pack
 _unpack = unpack
@@ -87,11 +89,11 @@ class OrderedDict:
 
     def rename(self, old, new):
         """Rename an entry"""
-        print old, new
-        print old in self
-        print "K", self.keys()
+        print(old, new)
+        print(old in self)
+        print("K", self.keys())
         self[new] = self[old]
-        print self[new]
+        print(self[new])
         del self[old]
 
     def __copy__(self):
@@ -109,7 +111,7 @@ class OrderedDict:
 
 def join(seq):
     """Create a joined string out of a list of substrings."""
-    return "".join(seq)
+    return bytes().join(seq)
 
 def readfile(source):
     """Read data from a file, return data as a string. Target may
@@ -159,27 +161,27 @@ _trans_table = "".join(_trans_table)
 def zpad(chars):
     """Pad a string with zero bytes, up until a length of 8.
     The string is truncated if longer than 8 bytes."""
-    return pack('8s', chars)
-
+    return pack('8s', six.b(chars))
+    
 def zstrip(chars):
     """Strip all data following the first zero in the string"""
-    if '\0' in chars:
+    if '\0' in str(chars):
         return chars[:chars.index("\0")]
     return chars
 
 def safe_name(chars):
-    return chars[:8].translate(_trans_table)
+    return str(chars)[:8].translate(_trans_table)
 
 def fixname(chars):
-    if '\0' in chars:
+    if '\0' in str(chars):
         chars = chars[:chars.index("\0")]
-    chars = chars.translate(_trans_table)
+    chars = str(chars).translate(_trans_table)
     return chars
 
 def fixpadname(chars):
     """Same as fixname, but returns a string of exactly 8 bytes length,
     using zero (0x00) bytes for padding."""
-    print "DEPRECATED!"
+    print("DEPRECATED!")
     return zpad(fixname(chars))
 
 def fix_saving_name(name):
@@ -226,6 +228,8 @@ class Struct(object):
 
     def __init__(self, %(initargs)s, bytes=None):
         if bytes:
+            from omg.util import zstrip, safe_name
+            from struct import unpack
             %(unpackexpr)s
         else:
             %(initbody)s
@@ -235,6 +239,8 @@ class Struct(object):
         return object.__getattribute__(self, name)
 
     def pack(self):
+        from omg.util import zpad, safe_name
+        from struct import pack
         return %(packexpr)s
 
 %(flagdefs)s
@@ -307,7 +313,7 @@ def _structdef(name, doc, fields, flags=None, init_exec=""):
     #           self.foo = zstrip(safe_name(self.foo))
     unpackexpr =  ', '.join('self.'+f[0] for f in fields)
     unpackexpr += (" = unpack(%r, bytes); " % fmt)
-    unpackexpr += "; ".join("self.%s=zstrip(safe_name(self.%s))" % \
+    unpackexpr += "; ".join("self.%s=zstrip(safe_name(self.%s.decode('ascii', 'ignore')))" % \
         (f[0], f[0]) for f in fields if 's' in f[1])
 
     # example:  self.x=x; self.y=y; self.foo=foo
@@ -324,10 +330,12 @@ def _structdef(name, doc, fields, flags=None, init_exec=""):
 
     s = _struct_template % locals()
 
-    # print s.replace("Struct", name)
+    # print(s.replace("Struct", name))
     return compile(s, "<struct>", "exec")
 
 def make_struct(*args, **kwargs):
     """Create a Struct class according to the given format"""
-    exec _structdef(*args, **kwargs)
-    return Struct
+    namespace = {}
+    
+    exec(_structdef(*args, **kwargs), namespace)
+    return namespace['Struct']

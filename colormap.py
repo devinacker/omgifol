@@ -1,5 +1,6 @@
 import omg.palette
 import omg.lump
+from omg import six
 
 class Colormap:
     """An editor for Doom's COLORMAP lump. The colormap holds 34 tables
@@ -43,15 +44,15 @@ class Colormap:
         """Load from a COLORMAP lump."""
         assert len(lump.data) == 34*256
         for n in range(34):
-            self.tables[n] = [ord(lump.data[i]) for i in range(n*256,(n+1)*256)]
+            self.tables[n] = [six.indexbytes(lump.data, i) for i in range(n*256,(n+1)*256)]
 
     def to_lump(self):
         """Pack to a COLORMAP lump."""
         
-        output = ""
+        output = bytes()
         for t in self.tables:
             for c in t:
-                output += chr(c)
+                output += six.int2byte(c)
                 
         return omg.lump.Lump(output)
         
