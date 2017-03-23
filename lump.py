@@ -147,7 +147,7 @@ class Graphic(Lump):
         width, height = self.dimensions
         tran_index = tran_index or self.palette.tran_index
         output = bytearray([tran_index] * (width*height))
-        pointers = unpack('%il'%width, data[8 : 8 + width*4])
+        pointers = unpack('<%il'%width, data[8 : 8 + width*4])
         for x in range(width):
             pointer = pointers[x]
             while six.indexbytes(data, pointer) != 0xff:

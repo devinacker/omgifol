@@ -165,8 +165,12 @@ def zpad(chars):
     
 def zstrip(chars):
     """Strip all data following the first zero in the string"""
-    if '\0' in str(chars):
+    if type(chars) == bytes:
+        chars = chars.decode("utf-8")
+    if '\0' in chars:
         return chars[:chars.index("\0")]
+    elif '\x00' in chars:
+        return chars[:chars.index("\x00")]
     return chars
 
 def safe_name(chars):

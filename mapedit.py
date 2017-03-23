@@ -395,4 +395,3 @@ class MapEditor:
             z.x += offset[0]
             z.y += offset[1]
             self.things.append(z)
-
