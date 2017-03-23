@@ -147,6 +147,7 @@ GLSeg = make_struct(
 
 class MapEditor:
     """Doom map editor
+
     Data members:
         vertexes      List containing Vertex objects
         sidedefs      List containing Sidedef objects
