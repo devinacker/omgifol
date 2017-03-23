@@ -1,6 +1,7 @@
 from omg.lump import Lump
 from omg.util import *
-from omg.wad import TxdefGroup
+from omg.wad  import TxdefGroup
+from omg      import six
 
 TextureDef = make_struct(
   "TextureDef",
@@ -45,7 +46,7 @@ class Textures(OrderedDict):
     def from_lumps(self, *args):
         """Load texture definitions from a TEXTURE1/2 lump and its
         associated PNAMES lump, or a lump group containing the lumps."""
-        from wad import LumpGroup
+        from omg.wad import LumpGroup
         if len(args) == 1:
             g = args[0]
             assert isinstance(g, LumpGroup)
@@ -58,16 +59,16 @@ class Textures(OrderedDict):
         # Unpack PNAMES
         numdefs = unpack16(pnames.data[0:2])
         pnames = [zstrip(pnames.data[ptr:ptr+8]) \
-            for ptr in xrange(4, 8*numdefs+4, 8)]
+            for ptr in range(4, 8*numdefs+4, 8)]
 
         # Unpack TEXTURE1
         data = texture1.data
-        numtextures = unpack('i', data[0:4])[0]
-        pointers = unpack('i'*numtextures, data[4:4+numtextures*4])
+        numtextures = unpack('<i', data[0:4])[0]
+        pointers = unpack('<%ii'%numtextures, data[4:4+numtextures*4])
         for ptr in pointers:
             texture = TextureDef(bytes=data[ptr:ptr+22])
             for pptr in range(ptr+22, ptr+22+10*texture.npatches, 10):
-                x, y, idn = unpack('hhh', data[pptr:pptr+6])
+                x, y, idn = unpack('<hhh', data[pptr:pptr+6])
                 texture.patches.append(PatchDef(x, y, name=pnames[idn]))
             self[texture.name] = texture
 
@@ -84,9 +85,9 @@ class Textures(OrderedDict):
                 if p.name not in used_pnames:
                     used_pnames[p.name] = len(used_pnames)
                 p.id = used_pnames[p.name]
-        pnmap = sorted([(i, name) for (name, i) in used_pnames.iteritems()])
+        pnmap = sorted([(i, name) for (name, i) in six.iteritems(used_pnames)])
         pnames = pack32(len(pnmap)) + \
-            ''.join(zpad(safe_name(name)) for i, name in pnmap)
+            bytes().join(zpad(safe_name(name)) for i, name in pnmap)
 
         texture1 = []
         pointers = []
@@ -94,18 +95,18 @@ class Textures(OrderedDict):
         for name, data in textures:
             data.npatches = len(data.patches)
             texture1.append(data.pack())
-            texture1.append(''.join(p.pack() for p in data.patches))
+            texture1.append(bytes().join(p.pack() for p in data.patches))
             pointers.append(ptr)
             ptr += 22 + data.npatches*10
 
         a = pack32(len(textures))
         #print "a", len(a)
-        b = ''.join([pack32(p) for p in pointers])
+        b = bytes().join([pack32(p) for p in pointers])
         #print "b", len(b)
         #print "texture1", type(texture1), len(texture1)
         #print texture1
-        c = ''.join(texture1)
-        texture1 = ''.join([a, b, c])
+        c = bytes().join(texture1)
+        texture1 = bytes().join([a, b, c])
 
         g = TxdefGroup('txdefs', Lump, ['TEXTURE?', 'PNAMES'])
         g['TEXTURE1'], g['PNAMES'] = Lump(texture1), Lump(pnames)

@@ -4,6 +4,7 @@ By Fredrik Johansson
 http://fredrikj.net
 
 See manual.html for installation and usage notes.
+Requires Python 2.7.
 
 This is Revenant's personal fork. What's new:
 

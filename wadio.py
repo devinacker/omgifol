@@ -1,4 +1,4 @@
-import os, md5, time
+import os, hashlib, time
 from omg.util import *
 
 Header = make_struct(
@@ -74,20 +74,24 @@ class WadIO:
         if openfrom is not None:
             self.open(openfrom)
 
+    def __del__(self):
+        if self.basefile:
+            self.basefile.close()
+
     def open(self, filename):
         """Open a WAD file, create a new file if none exists at the path."""
         assert not self.entries
         if self.basefile:
-            raise IOError, "The handle is already open"
+            raise IOError("The handle is already open")
         # Open an existing WAD
         if os.path.exists(filename):
             self.basefile = open(filename, 'r+b')
             filesize = os.stat(self.basefile.name)[6]
             self.header = h = Header(bytes=self.basefile.read(Header._fmtsize))
             if (not h.type in ("PWAD", "IWAD")) or filesize < 12:
-                raise IOError, "The file is not a valid WAD file."
+                raise IOError("The file is not a valid WAD file.")
             if filesize < h.dir_ptr + h.dir_len*Entry._fmtsize:
-                raise IOError, "Invalid directory information in header."
+                raise IOError("Invalid directory information in header.")
             self.basefile.seek(h.dir_ptr)
             self.entries = [Entry(bytes=self.basefile.read(Entry._fmtsize)) \
                 for i in range(h.dir_len)]
@@ -102,8 +106,8 @@ class WadIO:
         assert self.basefile
         # Unfortunately, a save can't be forced here.
         if not self.issafe:
-            raise IOError, \
-                "closing a modified file may corrupt it. use save() first"
+            raise IOError(\
+                "closing a modified file may corrupt it. use save() first")
         self.basefile.close()
         self.basefile = None
 
@@ -229,7 +233,7 @@ class WadIO:
         fpath = self.basefile.name
         # Write to a temporary file and rename it when done
         # os.tmpnam works too, but gives a security warning
-        tmppath = md5.md5(str(time.time())).hexdigest()[:8] + ".tmp"
+        tmppath = hashlib.md5(str(time.time())).hexdigest()[:8] + ".tmp"
         tmppath = os.path.join(os.path.dirname(fpath), tmppath)
         outwad = create_wad(tmppath)
         for i in range(len(self.entries)):
