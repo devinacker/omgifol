@@ -164,8 +164,14 @@ def zpad(chars):
     return pack('8s', six.b(chars))
     
 def zstrip(chars):
-    """Strip all data following the first zero in the string"""
-    if '\0' in str(chars):
+    """
+    Return a string representing chars with all trailing null bytes removed.
+    chars can be a string or byte string.
+    """
+    if isinstance(chars, bytes):
+        chars = str(chars.decode('ascii', 'ignore'))
+    
+    if '\0' in chars:
         return chars[:chars.index("\0")]
     return chars
 
@@ -173,16 +179,7 @@ def safe_name(chars):
     return str(chars)[:8].translate(_trans_table)
 
 def fixname(chars):
-    if '\0' in str(chars):
-        chars = chars[:chars.index("\0")]
-    chars = str(chars).translate(_trans_table)
-    return chars
-
-def fixpadname(chars):
-    """Same as fixname, but returns a string of exactly 8 bytes length,
-    using zero (0x00) bytes for padding."""
-    print("DEPRECATED!")
-    return zpad(fixname(chars))
+    return zstrip(chars).translate(_trans_table)
 
 def fix_saving_name(name):
     """Neutralizes backslashes in Arch-Vile frame names"""
@@ -310,10 +307,10 @@ def _structdef(name, doc, fields, flags=None, init_exec=""):
     initargs = ', '.join(f[0] + "=" + repr(f[2]) for f in fields+extra)
 
     # example:  self.x, self.y, self.foo = unpack('hh8s', bytes);
-    #           self.foo = zstrip(safe_name(self.foo))
+    #           self.foo = safe_name(zstrip(self.foo))
     unpackexpr =  ', '.join('self.'+f[0] for f in fields)
     unpackexpr += (" = unpack(%r, bytes); " % fmt)
-    unpackexpr += "; ".join("self.%s=zstrip(safe_name(self.%s.decode('ascii', 'ignore')))" % \
+    unpackexpr += "; ".join("self.%s=safe_name(zstrip(self.%s))" % \
         (f[0], f[0]) for f in fields if 's' in f[1])
 
     # example:  self.x=x; self.y=y; self.foo=foo
