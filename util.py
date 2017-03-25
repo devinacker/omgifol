@@ -3,105 +3,69 @@
     by other Omgifol modules.
 """
 
-from __future__ import print_function
-from fnmatch    import fnmatchcase as wccmp
-from struct     import pack, unpack, calcsize
-from copy       import copy, deepcopy
-from omg        import six
+from __future__  import print_function
+from fnmatch     import fnmatchcase as wccmp
+from struct      import pack, unpack, calcsize
+from copy        import copy, deepcopy
+from collections import OrderedDict as od
+from omg         import six
 
 _pack = pack
 _unpack = unpack
 
-class OrderedDict:
-    """A dict-like container that remembers in which order items
-    were added."""
+class OrderedDict(od):
+    """
+    Like collections.OrderedDict but with a few helpful extras:
+    
+    - dicts can be added together
+    - find and rename methods
+    - items(), keys(), and values() return normal lists in both Python 2 and 3
+    """
 
     def __init__(self, source=None):
-        """Create new, optionally from contents of given source."""
-        self._items = {}
-        self._n = 0
+        od.__init__(self)
         if source:
             self.update(source)
 
-    def __setitem__(self, key, value):
-        """Set an item."""
-        self._items[key] = self._n, value
-        self._n += 1
-
-    def __getitem__(self, key):
-        """Retrieven an item."""
-        return self._items[key][1]
-
-    def __delitem__(self, key):
-        """Delete an item."""
-        del self._items[key]
-
-    def __contains__(self, key):
-        """Find if the dict holds the given key."""
-        return key in self._items
-
-    def __iter__(self):
-        """Iterate over keys"""
-        return iter(self.keys())
-
     def __add__(self, other):
-        """Adds two dicts, copying items shallowly"""
-        c = self.__class__()
-        c.update(self)
+        c = self.__class__(self)
         c.update(other)
         return c
 
-    def __len__(self):
-        """len(self)"""
-        return len(self._items)
-
-    def update(self, other):
-        """Adds all content from another dictionary."""
-        for k in other:
-            self[k] = other[k]
+    def __iadd__(self, other):
+        self.update(other)
+        return self
 
     def items(self):
-        """Returns a list of (key, value) tuples for all items."""
-        data = [(v[0], k, v[1]) for (k, v) in self._items.items()]
-        data.sort()
-        return [(d[1], d[2]) for d in data]
+        if six.PY3:
+            # return list instead of odict_items
+            return [i for i in od.items(self)]
+        else:
+            return od.items(self)
 
     def keys(self):
-        """Returns a list of all keys."""
-        data = [(v[0], k, v[1]) for (k, v) in self._items.items()]
-        data.sort()
-        return [d[1] for d in data]
+        if six.PY3:
+            # return list instead of odict_keys
+            return [i for i in od.keys(self)]
+        else:
+            return od.keys(self)
 
     def values(self):
-        """Returns a list of all values."""
-        data = [(v[0], k, v[1]) for (k, v) in self._items.items()]
-        data.sort()
-        return [d[2] for d in data]
-
-    def clear(self):
-        """Delete all items."""
-        self._items.clear()
+        if six.PY3:
+            # return list instead of odict_values
+            return [i for i in od.values(self)]
+        else:
+            return od.values(self)
 
     def find(self, pattern):
         """Find all items that match the given pattern (supporting
         wildcards). Returns a list of keys."""
-        return [k for k in self.keys() if wccmp(k, pattern)]
+        return [k for k in od.keys(self) if wccmp(k, pattern)]
 
     def rename(self, old, new):
         """Rename an entry"""
-        print(old, new)
-        print(old in self)
-        print("K", self.keys())
         self[new] = self[old]
-        print(self[new])
         del self[old]
-
-    def __copy__(self):
-        """Creates a deep copy."""
-        a = self.__class__()
-        for k in self:
-            a[k] = copy(self[k])
-        return a
 
 
 #----------------------------------------------------------------------
