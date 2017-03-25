@@ -102,25 +102,26 @@ class Graphic(Lump):
     width  = property(lambda self: self.dimensions[0])
     height = property(lambda self: self.dimensions[1])
 
-    def from_raw(self, data, width, height, x_offset=0, y_offset=0, pal=None):
-        """Load a raw 8-bpp image, converting to the Doom picture format
-        (used by all graphics except flats)"""
-        pal = pal or omg.palette.default
+    def from_pixels(self, data, width, height, x_offset=0, y_offset=0):
+        """Load a list of 8bpp pixels.
+        Pixels with a negative value are transparent."""
         # First pass: extract pixel data in column+post format
         columns_in = [data[n:width*height:width] for n in range(width)]
         columns_out = []
         for column in columns_in:
-            # Split into chunks of continuous non-transparent pixels
-            postdata = filter(None, column.split(six.int2byte(pal.tran_index)))
             # Find the y position where each chunk starts
             start_rows = []
+            postdata = []
             in_trans = True
             for y in range(height):
-                if six.indexbytes(column, y) == pal.tran_index:
+                if column[y] < 0:
                     in_trans = True
-                elif in_trans:
-                    start_rows.append(y)
-                    in_trans = False
+                else:
+                    if in_trans:
+                        start_rows.append(y)
+                        postdata.append(bytearray())
+                        in_trans = False
+                    postdata[-1].append(column[y])
             columns_out.append(zip(start_rows, postdata))
         # Second pass: compile column+post data, adding pointers
         data = []
@@ -137,16 +138,19 @@ class Graphic(Lump):
         self.data = bytes().join([pack('4h', width, height, x_offset, y_offset),
                     bytes().join(columnptrs), bytes().join(data)])
 
-    def to_raw(self, tran_index=None):
-        """Returns self converted to a raw (8-bpp) image.
+    def from_raw(self, data, width, height, x_offset=0, y_offset=0, pal=None):
+        """Load a raw 8-bpp image, converting to the Doom picture format
+        (used by all graphics except flats)"""
+        pal = pal or omg.palette.default
+        pixels = [i if i != pal.tran_index else -1 for i in six.iterbytes(data)]
+        self.from_pixels(pixels, width, height, x_offset, y_offset)
 
-        `tran_index` specifies the palette index to use for
-        transparent pixels. The value defaults to that of the
-        Graphic object's palette instance."""
+    def to_pixels(self):
+        """Returns self converted to a list of 8bpp pixels.
+        Pixels with a negative value are transparent."""
         data = self.data
         width, height = self.dimensions
-        tran_index = tran_index or self.palette.tran_index
-        output = bytearray([tran_index] * (width*height))
+        output = [-1] * (width*height)
         pointers = unpack('<%il'%width, data[8 : 8 + width*4])
         for x in range(width):
             pointer = pointers[x]
@@ -157,23 +161,43 @@ class Graphic(Lump):
                     output[op] = six.indexbytes(data, p)
                     op += width
                 pointer += post_length + 4
-        return bytes(output)
+        return output
+        
+    def to_raw(self, tran_index=None):
+        """Returns self converted to a raw (8-bpp) image.
 
-    def to_Image(self):
+        `tran_index` specifies the palette index to use for
+        transparent pixels. The value defaults to that of the
+        Graphic object's palette instance."""
+        tran_index = tran_index or self.palette.tran_index
+        output = [i if i >= 0 else tran_index for i in self.to_pixels()]
+        return bytes(bytearray(output))
+
+    def to_Image(self, mode='P'):
         """Convert to a PIL Image instance"""
-        im = Image.new('P', self.dimensions, None)
-        if isinstance(self, Flat):
-            im.frombytes(self.data)
+        if mode != 'RGBA' or isinstance(self, Flat):
+            # target image has no alpha, 
+            # or source image is a flat (which has no transparent pixels)
+            im = Image.new('P', self.dimensions, None)
+            if isinstance(self, Flat):
+                im.frombytes(self.data)
+            else:
+                im.frombytes(self.to_raw())
+            im.putpalette(self.palette.save_bytes)
+            return im.convert(mode)
         else:
-            im.frombytes(self.to_raw())
-        im.putpalette(self.palette.save_bytes)
-        return im
+            # target image is RGBA and source image is not a flat
+            im = Image.new('RGBA', self.dimensions, None)
+            data = bytes().join([self.palette.bytes[i*3:i*3+3] + b'\xff' if i >= 0 \
+                                 else b'\0\0\0\0' for i in self.to_pixels()])
+            im.frombytes(data)
+            return im
 
     def from_Image(self, im, translate=False):
         """Load from a PIL Image instance
 
-        If the input image is 24-bit, the colors will be looked up
-        in the current palette.
+        If the input image is 24-bit or 32-bit, the colors will be
+        looked up in the current palette.
 
         If the input image is 8-bit, indices will simply be copied
         from the input image. To properly translate colors between
@@ -187,6 +211,15 @@ class Graphic(Lump):
         if im.mode == "RGB":
             pixels = join([chr(self.palette.match(unpack('BBB', \
                 pixels[i*3:(i+1)*3]))) for i in range(width*height)])
+
+            self.from_raw(pixels, width, height, xoff, yoff, self.palette)
+        
+        elif im.mode == "RGBA":
+            pixels = [unpack('BBBB', pixels[i*4:(i+1)*4]) for i in range(width*height)]
+            pixels = [self.palette.match(i[0:3]) if i[3] > 0 else -1 for i in pixels]
+            
+            self.from_pixels(pixels, width, height, xoff, yoff)
+    
         elif im.mode == 'P':
             srcpal = im.palette.tobytes()
             if im.palette.mode == "RGB":
@@ -217,10 +250,10 @@ class Graphic(Lump):
                     if not ri % palsize and ri//palsize != self.palette.tran_index:
                         pixels = pixels.replace(six.int2byte(ri//palsize),
                             six.int2byte(self.palette.tran_index))
-        else:
-            raise TypeError("image mode must be 'P' or 'RGB'")
 
-        self.from_raw(pixels, width, height, xoff, yoff, self.palette)
+            self.from_raw(pixels, width, height, xoff, yoff, self.palette)
+        else:
+            raise TypeError("image mode must be 'P', 'RGB', or 'RGBA'")
 
     def from_file(self, filename, translate=False):
         """Load graphic from an image file."""
@@ -240,20 +273,19 @@ class Graphic(Lump):
         Special cases: ".lmp" saves the raw lump data, and ".raw" saves
         the raw pixel data.
 
-        `mode` may be be 'P' or 'RGB' for palette or 24 bit output,
-        respectively. However, .raw ignores this parameter and always
-        writes in palette mode."""
+        `mode` may be be 'P', 'RGB', or 'RGBA' for palette or 24/32 bit
+        output, respectively. However, .raw ignores this parameter and
+        always writes in palette mode."""
 
         format = os.path.splitext(filename)[1][1:].upper()
         if   format == 'LMP': writefile(filename, self.data)
         elif format == 'RAW': writefile(filename, self.to_raw())
         else:
-            im = self.to_Image()
-            om = im.convert(mode)
+            im = self.to_Image(mode)
             if format:
-                om.save(filename)
+                im.save(filename)
             else:
-                om.save(filename, "PNG")
+                im.save(filename, "PNG")
 
     def translate(self, pal):
         """Translate (in-place) the graphic to another palette."""
