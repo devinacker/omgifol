@@ -4,15 +4,19 @@ By Fredrik Johansson
 http://fredrikj.net
 
 See manual.html for installation and usage notes.
-Requires Python 2.7.
+Requires Python 2.7 or Python 3.x.
 
 This is Revenant's personal fork. What's new:
 
+ - support for Python 3.x (experimental; 3.5.0 or higher recommended)
  - support for Hexen / ZDoom maps
- - better handling of missing map data (including nodes)
  - better map loading (supports names other than ExMx and MAPxx,
    doesn't mistake MAPINFO for an actual map)
  - better support for "limit removing" maps
+ - better handling of missing map data
+ - tall patch support
+ - support for importing/exporting RGBA images (converted to the WAD's
+   256-color palette on import, but can contain true transparency)
  
 Some planned things:
 

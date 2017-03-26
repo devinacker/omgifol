@@ -113,15 +113,38 @@ class Graphic(Lump):
             start_rows = []
             postdata = []
             in_trans = True
+            tall = False
+            offset = 0
             for y in range(height):
+                # split at 128 for vanilla-compatible images without premature tiling
+                if height < 256: 
+                    if y == 128:
+                        in_trans = True
+            
+                # for tall patch support
+                elif offset == 254:
+                    in_trans = True
+                    tall = True
+                    # dummy post
+                    start_rows.append(254)
+                    postdata.append(bytearray())
+                    # start relative offsets
+                    offset = 0
+            
                 if column[y] < 0:
                     in_trans = True
                 else:
                     if in_trans:
-                        start_rows.append(y)
+                        # start a new post
+                        start_rows.append(offset)
                         postdata.append(bytearray())
                         in_trans = False
+                        if tall:
+                            # reset relative offset for tall patches
+                            offset = 0
                     postdata[-1].append(column[y])
+                
+                offset += 1
             columns_out.append(zip(start_rows, postdata))
         # Second pass: compile column+post data, adding pointers
         data = []
@@ -153,11 +176,22 @@ class Graphic(Lump):
         output = [-1] * (width*height)
         pointers = unpack('<%il'%width, data[8 : 8 + width*4])
         for x in range(width):
+            y = -1
             pointer = pointers[x]
+            if pointer >= len(data):
+                continue
+
             while six.indexbytes(data, pointer) != 0xff:
+                offset = six.indexbytes(data, pointer)
+                if offset <= y:
+                    y += offset # for tall patches
+                else:
+                    y = offset				
                 post_length = six.indexbytes(data, pointer+1)
-                op = six.indexbytes(data, pointer)*width + x
+                op = y*width + x
                 for p in range(pointer + 3, pointer + post_length + 3):
+                    if op >= len(output) or p >= len(data):
+                        break
                     output[op] = six.indexbytes(data, p)
                     op += width
                 pointer += post_length + 4
@@ -205,8 +239,6 @@ class Graphic(Lump):
 
         pixels = im.tobytes()
         width, height = im.size
-        # High resolution graphics not supported yet, so truncate
-        height = min(254, height)
         xoff, yoff = (width // 2)-1, height-5
         if im.mode == "RGB":
             pixels = join([chr(self.palette.match(unpack('BBB', \
