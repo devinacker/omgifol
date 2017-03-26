@@ -66,7 +66,6 @@ class Palette:
         self.memo = {}
         self.bright_lut = []
         self.reset_memo()
-        self.build_lut()
 
     def make_bytes(self):
         """Create/update 'bytes' and 'save_bytes' from the current set of
@@ -132,6 +131,8 @@ class Palette:
             return self.tran_index
         if color in self.memo:
             return self.memo[color]
+        if len(self.bright_lut) == 0:
+            self.build_lut()
         best_dist = 262144
         best_i = 0
         ar, ag, ab = color
@@ -166,7 +167,7 @@ class Palette:
         self.make_bytes()
         self.make_grays()
         self.reset_memo()
-        self.build_lut()
+        self.bright_lut = []
 
 # Colors of the Doom palette, used by default
 default_colors = (
