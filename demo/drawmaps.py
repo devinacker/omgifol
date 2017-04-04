@@ -48,6 +48,20 @@ def drawmap(wad, name, filename, width, format):
          draw.line((p1x, p1y+1, p2x, p2y+1), fill=color)
          draw.line((p1x, p1y-1, p2x, p2y-1), fill=color)
 
+    tr = 2; # Thing radius - how big each thing is.
+    for thing in edit.things:
+        tt = thing.type
+        tx = thing.x * scale + 4
+        ty = -thing.y * scale + 4
+        # Multiply by prime numbers to map to a random color.
+        # TODO: Come up with a type to color map that resembles the actual
+        # thing colors.
+        # TODO: Avoid colors that are too close to the background color or
+        # wall colors.
+        tc = ((tt * 29333) % 256, (tt * 41227) % 256, (tt * 78979) % 256)
+        draw.ellipse(((tx - tr) - xmin, (ty - tr) - ymin,
+                      (tx + tr) - xmin, (ty + tr) - ymin), fill=tc)
+
     del draw
 
     im.save(filename, format)
