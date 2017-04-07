@@ -131,7 +131,7 @@ class Graphic(Lump):
                     # start relative offsets
                     offset = 0
             
-                if column[y] < 0:
+                if column[y] is None:
                     in_trans = True
                 else:
                     if in_trans:
@@ -165,15 +165,15 @@ class Graphic(Lump):
         """Load a raw 8-bpp image, converting to the Doom picture format
         (used by all graphics except flats)"""
         pal = pal or omg.palette.default
-        pixels = [i if i != pal.tran_index else -1 for i in six.iterbytes(data)]
+        pixels = [i if i != pal.tran_index else None for i in six.iterbytes(data)]
         self.from_pixels(pixels, width, height, x_offset, y_offset)
 
     def to_pixels(self):
         """Returns self converted to a list of 8bpp pixels.
-        Pixels with a negative value are transparent."""
+        Pixels with value None are transparent."""
         data = self.data
         width, height = self.dimensions
-        output = [-1] * (width*height)
+        output = [None] * (width*height)
         pointers = unpack('<%il'%width, data[8 : 8 + width*4])
         for x in range(width):
             y = -1
@@ -204,7 +204,7 @@ class Graphic(Lump):
         transparent pixels. The value defaults to that of the
         Graphic object's palette instance."""
         tran_index = tran_index or self.palette.tran_index
-        output = [i if i >= 0 else tran_index for i in self.to_pixels()]
+        output = [i or tran_index for i in self.to_pixels()]
         return bytes(bytearray(output))
 
     def to_Image(self, mode='P'):
@@ -222,7 +222,7 @@ class Graphic(Lump):
         else:
             # target image is RGBA and source image is not a flat
             im = Image.new('RGBA', self.dimensions, None)
-            data = bytes().join([self.palette.bytes[i*3:i*3+3] + b'\xff' if i >= 0 \
+            data = bytes().join([self.palette.bytes[i*3:i*3+3] + b'\xff' if i is not None \
                                  else b'\0\0\0\0' for i in self.to_pixels()])
             im.frombytes(data)
             return im
@@ -248,7 +248,7 @@ class Graphic(Lump):
         
         elif im.mode == "RGBA":
             pixels = [unpack('BBBB', pixels[i*4:(i+1)*4]) for i in range(width*height)]
-            pixels = [self.palette.match(i[0:3]) if i[3] > 0 else -1 for i in pixels]
+            pixels = [self.palette.match(i[0:3]) if i[3] > 0 else None for i in pixels]
             
             self.from_pixels(pixels, width, height, xoff, yoff)
     

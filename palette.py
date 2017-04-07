@@ -37,7 +37,7 @@ class Palette:
         transparent color should be placed. Note that this is only used
         when saving images, and thus doesn't affect color lookups.
         'tran_color' is the color to use for transparency."""
-
+
         colors = colors or default_colors
         tran_index = tran_index or default_tran_index
         tran_color = tran_color or default_tran_color

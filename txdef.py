@@ -26,7 +26,6 @@ PatchDef = make_struct(
    ["name",   'x',  "-"]]
 )
 
-
 # TODO: integrate with textures lump group instead?
 
 class Textures(OrderedDict):
