@@ -85,7 +85,12 @@ class WadIO:
             raise IOError("The handle is already open")
         # Open an existing WAD
         if os.path.exists(filename):
-            self.basefile = open(filename, 'r+b')
+            try:
+                self.basefile = open(filename, 'r+b')
+            except IOError:
+                # assume file is read-only
+                self.basefile = open(filename, 'rb')
+            
             filesize = os.stat(self.basefile.name)[6]
             self.header = h = Header(bytes=self.basefile.read(Header._fmtsize))
             if (not h.type in ("PWAD", "IWAD")) or filesize < 12:
