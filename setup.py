@@ -5,7 +5,7 @@ import glob
 
 setup(
 	name = 'omgifol',
-	version = '0.3',
+	version = '0.3.0',
 	description = 'A Python library for manipulation of Doom WAD files',
 	url = 'https://github.com/devinacker/omgifol',
 	author = 'Devin Acker, Fredrik Johansson',
