@@ -241,7 +241,7 @@ class Graphic(Lump):
         width, height = im.size
         xoff, yoff = (width // 2)-1, height-5
         if im.mode == "RGB":
-            pixels = join([chr(self.palette.match(unpack('BBB', \
+            pixels = join([six.int2byte(self.palette.match(unpack('BBB', \
                 pixels[i*3:(i+1)*3]))) for i in range(width*height)])
 
             self.from_raw(pixels, width, height, xoff, yoff, self.palette)
@@ -321,13 +321,13 @@ class Graphic(Lump):
 
     def translate(self, pal):
         """Translate (in-place) the graphic to another palette."""
-        lexicon = [chr(pal.match(self.palette.colors[i])) for i in range(256)]
-        lexicon[self.palette.tran_index] = chr(pal.tran_index)
+        lexicon = [six.int2byte(pal.match(self.palette.colors[i])) for i in range(256)]
+        lexicon[self.palette.tran_index] = six.int2byte(pal.tran_index)
         if isinstance(self, Flat):
             self.data = join([lexicon[b] for b in self.data])
         else:
             raw = self.to_raw()
-            #raw = raw.replace(chr(self.palette.tran_index), chr(pal.tran_index))
+            #raw = raw.replace(six.int2byte(self.palette.tran_index), six.int2byte(pal.tran_index))
             self.load_raw(join([lexicon[b] for b in raw]),
                 self.width, self.height,
                 self.x_offset, self.y_offset)
