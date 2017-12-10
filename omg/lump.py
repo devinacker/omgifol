@@ -204,7 +204,7 @@ class Graphic(Lump):
         transparent pixels. The value defaults to that of the
         Graphic object's palette instance."""
         tran_index = tran_index or self.palette.tran_index
-        output = [i or tran_index for i in self.to_pixels()]
+        output = [i if i is not None else tran_index for i in self.to_pixels()]
         return bytes(bytearray(output))
 
     def to_Image(self, mode='P'):
