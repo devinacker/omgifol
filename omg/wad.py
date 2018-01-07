@@ -115,15 +115,17 @@ class HeaderGroup(LumpGroup):
             name = wadio.entries[i].name
             added = False
             # now search only using tail lumps so that any map with map lumps is loaded correctly
-            if i < numlumps - 1 and inwclist(wadio.entries[i + 1].name, self.tail):
+            if i < numlumps - 1 and inwclist(wadio.entries[i + 1].name, self.tail[0:1]):
                 added = True
                 self[name] = NameGroup()
                 wadio.entries[i].been_read = True
+                tail = self.tail[:]
                 i += 1
-                while i < numlumps and inwclist(wadio.entries[i].name, self.tail):
+                while i < numlumps and len(tail) > 0 and inwclist(wadio.entries[i].name, tail[0:1]):
                     self[name][wadio.entries[i].name] = \
                         self.lumptype(wadio.read(i))
                     wadio.entries[i].been_read = True
+                    tail.pop(0)
                     i += 1
             if not added:
                 i += 1
