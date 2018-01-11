@@ -104,7 +104,7 @@ class Graphic(Lump):
 
     def from_pixels(self, data, width, height, x_offset=0, y_offset=0):
         """Load a list of 8bpp pixels.
-        Pixels with a negative value are transparent."""
+        Pixels with value None are transparent."""
         # First pass: extract pixel data in column+post format
         columns_in = [data[n:width*height:width] for n in range(width)]
         columns_out = []
