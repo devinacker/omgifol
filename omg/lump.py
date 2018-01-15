@@ -97,8 +97,12 @@ class Sound(Lump):
     def __init__(self, data=None, from_file=None):
         Lump.__init__(self, data, from_file)
         # default to an empty digitized sound effect if no data loaded
-        self.format = self.format if self.format is not None else 3
-    
+        try:
+            if self.format is None:
+                self.format = 3
+        except TypeError:
+            pass
+        
     def get_format(self):
         """Retrieve the format of the sound."""
         if len(self.data) < 2:
@@ -106,7 +110,7 @@ class Sound(Lump):
         else:
             format = unpack('<H', self.data[0:2])[0]
         if format > 3:
-            raise ValueError("Unknown or invalid sound format")
+            raise TypeError("Unknown or invalid sound format")
         return format
         
     def set_format(self, format):
@@ -114,9 +118,13 @@ class Sound(Lump):
         
         Warning: Changing a sound's format will erase any existing sound data!
         """
-        if format == self.format:
-            return # don't do anything if format is the same as before
-        elif format == 0:
+        try:
+            if format == self.format:
+                return # don't do anything if format is the same as before
+        except TypeError:
+            pass
+        
+        if format == 0:
             # PC speaker sound
             self.data = pack('<HH', format, 0)
         elif format == 1:
@@ -142,13 +150,16 @@ class Sound(Lump):
         elif format == 2:
             # single MIDI note
             return unpack('<H', self.data[8:10])[0]
-        else:
+        elif format == 3:
             # digitized sound
             return unpack('<I', self.data[4:8])[0] - 32
     
     def set_length(self, length):
         """Set the length of the sound. This will make the lump larger or smaller."""
         format = self.format
+        
+        if length < 0 or length > 65535:
+            raise ValueError("sound effect length must be between 0-65535")
 
         if format == 2:
             # single MIDI note
@@ -168,7 +179,7 @@ class Sound(Lump):
         elif format == 2:
             # single MIDI note
             return 0
-        else:
+        elif format == 3:
             # digitized sound
             return unpack('<H', self.data[2:4])[0]
     
@@ -242,8 +253,16 @@ class Sound(Lump):
         Otherwise it is expected to be a byte string.
         """
         
+        if isinstance(data, bytes):
+            length = len(data)
+            if length < 0 or length > 65535:
+                raise ValueError("sound effect length must be between 0-65535")
+
         # optionally change format if needed
-        format = self.format = format if format is not None else self.format
+        if format is None:
+            format = self.format
+        else:
+            self.format = format
         
         if format == 0:
             # PC speaker sound
@@ -254,12 +273,14 @@ class Sound(Lump):
         elif format == 2:
             # single MIDI note
             self.data = self.data[:6] + pack('<H', data) + self.data[8:]
-        else:
+        elif format == 3:
             # digitized sound
             self.data = self.data[:4] + pack('<I', 32 + len(data)) \
                         + b'\0'*16 + data + b'\0'*16
             if sample_rate is not None:
                 self.sample_rate = sample_rate
+        else:
+            raise ValueError("Unknown or invalid sound format")
     
     def to_raw(self):
         """Returns the raw values making up the sound as a byte string. 
@@ -278,7 +299,7 @@ class Sound(Lump):
         elif format == 2:
             # single MIDI note
             return unpack('<H', self.data[6:8])[0]
-        else:
+        elif format == 3:
             # digitized sound
             return self.data[24:-16]
 
@@ -370,6 +391,10 @@ class Graphic(Lump):
     def from_pixels(self, data, width, height, x_offset=0, y_offset=0):
         """Load a list of 8bpp pixels.
         Pixels with value None are transparent."""
+        
+        if min(width, height) < 0 or max(width, height) > 32767:
+            raise ValueError("image width and height must be between 0-32767")
+        
         # First pass: extract pixel data in column+post format
         columns_in = [data[n:width*height:width] for n in range(width)]
         columns_out = []
