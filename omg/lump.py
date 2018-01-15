@@ -8,6 +8,13 @@ try:
 except:
     pass
 
+# Import PySoundFile for sound file loading/saving. Equally optional.
+try:
+    from soundfile import SoundFile, check_format
+    import numpy as np
+except:
+    pass
+
 import os
 import omg.palette
 from omg.util import *
@@ -58,9 +65,267 @@ class Music(Lump):
 
 
 class Sound(Lump):
-    """Subclass of Lump, for sound lumps. Not yet implemented."""
-    pass
+    """Subclass of Lump, for Doom format sounds. Supports
+    conversion from/to RAWs (sequences of bytes), as well as 
+    saving to/loading from various file formats (via PySoundFile).
 
+    Useful attributes:
+        .format         -- DMX sound format
+        .length         -- (in frames/samples)
+        .sample_rate    --
+        .midi_bank      -- MIDI patch bank (format 1/2 only)
+        .midi_patch     -- MIDI patch number (format 1/2 only)
+    
+    Possible values for the 'format' attribute:
+    
+    0: PC speaker sound
+       Raw data consists of values 0-127 corresponding to pitch.
+       Sample rate is fixed at 140Hz.
+    1: MIDI sound sequence
+       Raw data consists of MIDI note and pitch bend info.
+       Sample rate is fixed at 140Hz.
+    2: MIDI note
+       Raw data consists of a single MIDI note.
+       Sample rate is undefined. Length is MIDI note length.
+    3: Digitized sound (default)
+       Raw data is 8-bit unsigned PCM.
+       Sample rate defaults to 11025 Hz, but can be changed.
+       
+    Only format 3 can be exported to an audio file.
+    """
+    
+    def __init__(self, data=None, from_file=None):
+        Lump.__init__(self, data, from_file)
+        # default to an empty digitized sound effect if no data loaded
+        self.format = self.format if self.format is not None else 3
+    
+    def get_format(self):
+        """Retrieve the format of the sound."""
+        if len(self.data) < 2:
+            format = None
+        else:
+            format = unpack('<H', self.data[0:2])[0]
+        if format > 3:
+            raise ValueError("Unknown or invalid sound format")
+        return format
+        
+    def set_format(self, format):
+        """Change the format of the sound.
+        
+        Warning: Changing a sound's format will erase any existing sound data!
+        """
+        if format == self.format:
+            return # don't do anything if format is the same as before
+        elif format == 0:
+            # PC speaker sound
+            self.data = pack('<HH', format, 0)
+        elif format == 1:
+            # MIDI sequence
+            self.data = pack('<HHHH', format, 0, 0, 0)
+        elif format == 2:
+            # single MIDI note
+            self.data = pack('<HHHHH', format, 0, 0, 0, 0)
+        elif format == 3:
+            # digitized sound
+            self.data = pack("<HHI32x", format, 11025, 32)
+        else:
+            raise ValueError("Unknown or invalid sound format")
+        
+    format = property(get_format, set_format)
+    
+    def get_length(self):
+        """Retrieve the length of the sound."""
+        format = self.format
+        if format == 0 or format == 1:
+            # PC speaker or MIDI sequence
+            return unpack('<H', self.data[2:4])[0]
+        elif format == 2:
+            # single MIDI note
+            return unpack('<H', self.data[8:10])[0]
+        else:
+            # digitized sound
+            return unpack('<I', self.data[4:8])[0] - 32
+    
+    def set_length(self, length):
+        """Set the length of the sound. This will make the lump larger or smaller."""
+        format = self.format
+
+        if format == 2:
+            # single MIDI note
+            self.data = self.data[:8] + pack('<H', length)
+        else:
+            # grow or shrink existing raw data to new size
+            self.from_raw(self.to_raw()[0:length] + b'\0'*(length - self.length))
+    
+    length = property(get_length, set_length)
+    
+    def get_sample_rate(self):
+        """Retrieve the sample rate of the sound. Only useful for digitized sounds."""
+        format = self.format
+        if format == 0 or format == 1:
+            # PC speaker or MIDI sequence
+            return 140
+        elif format == 2:
+            # single MIDI note
+            return 0
+        else:
+            # digitized sound
+            return unpack('<H', self.data[2:4])[0]
+    
+    def set_sample_rate(self, sample_rate):
+        """Set the sample rate of the sound. Only supported for digitized sounds."""
+        format = self.format
+        if format == 3:
+            # digitized sound
+            self.data = self.data[:2] + pack('<H', sample_rate) + self.data[4:]
+        else:
+            raise TypeError("set_sample_rate only supported for digitized sounds (format 3)")
+            
+    sample_rate = property(get_sample_rate, set_sample_rate)
+
+    def get_midi_bank(self):
+        """Retrieve the MIDI bank of the sound. Only useful for MIDI sounds."""
+        format = self.format
+        if format == 1:
+            # MIDI sequence
+            return unpack('<H', self.data[4:6])[0]
+        elif format == 2:
+            # single MIDI note
+            return unpack('<H', self.data[2:4])[0]
+            
+    def set_midi_bank(self, bank):
+        """Set the MIDI bank of the sound. Only supported for MIDI sounds."""
+        format = self.format
+        if format == 1:
+            # MIDI sequence
+            self.data = self.data[:4] + pack('<H', bank) + self.data[6:]
+        elif format == 2:
+            # single MIDI note
+            self.data = self.data[:2] + pack('<H', bank) + self.data[4:]
+        else:
+            raise TypeError("only supported for MIDI sounds (format 1 or 2)")
+    
+    midi_bank = property(get_midi_bank, set_midi_bank)
+
+    def get_midi_patch(self):
+        """Retrieve the MIDI patch of the sound. Only useful for MIDI sounds."""
+        format = self.format
+        if format == 1:
+            # MIDI sequence
+            return unpack('<H', self.data[6:8])[0]
+        elif format == 2:
+            # single MIDI note
+            return unpack('<H', self.data[4:6])[0]
+            
+    def set_midi_patch(self, patch):
+        """Set the MIDI patch of the sound. Only supported for MIDI sounds."""
+        format = self.format
+        if format == 1:
+            # MIDI sequence
+            self.data = self.data[:6] + pack('<H', patch) + self.data[8:]
+        elif format == 2:
+            # single MIDI note
+            self.data = self.data[:4] + pack('<H', patch) + self.data[6:]
+        else:
+            raise TypeError("only supported for MIDI sounds (format 1 or 2)")
+    
+    midi_patch = property(get_midi_patch, set_midi_patch)
+    
+    def from_raw(self, data, format=None, sample_rate=None):
+        """Replaces the raw values making up the sound.
+        
+        If 'format' or 'sample_rate' are not specified, the existing values
+        will be used.
+        
+        The expected values depend on the value of 'format'.
+        For format 2, 'data' is expected to be an int.
+        Otherwise it is expected to be a byte string.
+        """
+        
+        # optionally change format if needed
+        format = self.format = format if format is not None else self.format
+        
+        if format == 0:
+            # PC speaker sound
+            self.data = self.data[:2] + pack('<H', len(data)) + data
+        elif format == 1:
+            # MIDI sequence
+            self.data = self.data[:2] + pack('<H', len(data)) + self.data[4:8] + data
+        elif format == 2:
+            # single MIDI note
+            self.data = self.data[:6] + pack('<H', data) + self.data[8:]
+        else:
+            # digitized sound
+            self.data = self.data[:4] + pack('<I', 32 + len(data)) \
+                        + b'\0'*16 + data + b'\0'*16
+            if sample_rate is not None:
+                self.sample_rate = sample_rate
+    
+    def to_raw(self):
+        """Returns the raw values making up the sound as a byte string. 
+        
+        The resulting values depend on the value of 'format'.
+        For format 2, the value is returned an int.
+        Otherwise the data is returned as a byte string.
+        """
+        format = self.format
+        if format == 0:
+            # PC speaker
+            return self.data[4:]
+        elif format == 1:
+            # MIDI sequence
+            return self.data[8:]
+        elif format == 2:
+            # single MIDI note
+            return unpack('<H', self.data[6:8])[0]
+        else:
+            # digitized sound
+            return self.data[24:-16]
+
+    def from_file(self, filename):
+        """Load sound from an audio file."""
+        if filename[-4:].lower() == '.lmp':
+            self.data = readfile(filename)
+        else:
+            with SoundFile(filename) as file:
+                # get sound data and convert to 8-bit unsigned mono
+                sound = (file.read(dtype='int16') >> 8) + 128
+                if file.channels > 1:
+                    sound = np.mean(sound, axis=1)
+                
+                # create new format 3 sound
+                self.from_raw(sound.astype('uint8').tobytes(), 3, file.samplerate)
+
+    def to_file(self, filename, subtype='PCM_U8'):
+        """Save the sound to an audio file.
+
+        The output format is selected based on the filename extension.
+        For example, "file.wav" saves to WAV format. If the file has
+        no extension, WAV format is used.
+        
+        See the PySoundFile documentation for possible values of 'subtype'.
+        Possible values depend on the output format; if the given value is
+        not supported, the format's default will be used.
+
+        Special cases: ".lmp" saves the raw lump data, and ".raw" saves
+        the raw sound data."""
+
+        format = os.path.splitext(filename)[1][1:].upper() or 'WAV'
+        if   format == 'LMP': writefile(filename, self.data)
+        elif format == 'RAW': writefile(filename, self.to_raw())
+        elif self.format == 3:
+            if   check_format(format, subtype):  pass
+            elif check_format(format, 'PCM_U8'): subtype = 'PCM_U8'
+            elif check_format(format, 'PCM_S8'): subtype = 'PCM_S8'
+            else: subtype = None # use default for format
+        
+            with SoundFile(filename, 'w', self.sample_rate, 1, subtype, format=format) as file:
+                # convert to signed 16-bit (since SoundFile doesn't directly support 8-bit input)
+                # the result will just be converted back in the file though
+                sound = (np.frombuffer(self.to_raw(), dtype='uint8').astype('int16') - 128) << 8
+                file.write(sound)
+        else:
+            raise TypeError("audio file export only supported for digitized sounds (format 3)")
 
 class Graphic(Lump):
     """Subclass of Lump, for Doom format graphics. Supports
@@ -86,7 +351,7 @@ class Graphic(Lump):
 
     def set_offsets(self, xy):
         """Set the (x, y) offsets of the graphic."""
-        self.data = self.data[0:4] + pack('<hh', *xy) + self.data[8:]
+        self.data = self.data[:4] + pack('<hh', *xy) + self.data[8:]
 
     def get_dimensions(self):
         """Retrieve the (width, height) dimensions of the graphic."""
