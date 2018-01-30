@@ -118,6 +118,7 @@ class HeaderGroup(LumpGroup):
             if i < numlumps - 1 and inwclist(wadio.entries[i + 1].name, self.tail[0:1]):
                 added = True
                 self[name] = NameGroup()
+                self[name]["_HEADER_"] = Lump(wadio.read(i))
                 wadio.entries[i].been_read = True
                 tail = self.tail[:]
                 i += 1
@@ -134,7 +135,10 @@ class HeaderGroup(LumpGroup):
         """Save to a WadIO object."""
         for h in self:
             hs = self[h]
-            wadio.insert(h, bytes())
+            try:
+                wadio.insert(h, hs["_HEADER_"].data)
+            except KeyError:
+                wadio.insert(h, bytes())
             for t in self.tail:
                 if t in hs:
                     wadio.insert(t, hs[t].data)

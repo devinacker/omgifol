@@ -160,6 +160,10 @@ class MapEditor:
         if from_lumps is not None:
             self.from_lumps(from_lumps)
         else:
+            self.Thing   = Thing
+            self.Linedef = Linedef
+            
+            self.header   = Lump()
             self.vertexes = []
             self.sidedefs = []
             self.linedefs = []
@@ -178,23 +182,35 @@ class MapEditor:
     def from_lumps(self, lumpgroup):
         """Load entries from a lump group."""
         m = lumpgroup
+        
         try:
+            self.header   = m["_HEADER_"]
+            
             self.vertexes = self._unpack_lump(Vertex,    m["VERTEXES"].data)
             self.sidedefs = self._unpack_lump(Sidedef,   m["SIDEDEFS"].data)
             self.sectors  = self._unpack_lump(Sector,    m["SECTORS"].data)
             
-            if "BEHAVIOR" in m: # Hexen / ZDoom map
-                self.things   = self._unpack_lump(ZThing,    m["THINGS"].data)
-                self.linedefs = self._unpack_lump(ZLinedef,  m["LINEDEFS"].data)
-                
-                self.behavior = m["BEHAVIOR"].data
-                if "SCRIPTS" in m:
-                    self.scripts = m["SCRIPTS"].data
-                else:
-                    self.scripts = []
+            if "BEHAVIOR" in m:
+                # Hexen / ZDoom map
+                self.Thing   = ZThing
+                self.Linedef = ZLinedef
+                self.behavior = m["BEHAVIOR"]
+                # optional script sources
+                try:
+                    self.scripts = m[m.find("SCRIPT*")[0]]
+                except IndexError:
+                    self.scripts = Lump()
             else:
-                self.things   = self._unpack_lump(Thing,     m["THINGS"].data)
-                self.linedefs = self._unpack_lump(Linedef,   m["LINEDEFS"].data)
+                self.Thing   = Thing
+                self.Linedef = Linedef
+                try:
+                    del self.behavior
+                    del self.scripts
+                except AttributeError:
+                    pass
+            
+            self.things   = self._unpack_lump(self.Thing,   m["THINGS"].data)
+            self.linedefs = self._unpack_lump(self.Linedef, m["LINEDEFS"].data)
         except KeyError as e:
             raise ValueError("map is missing %s lump" % e)
         
@@ -207,17 +223,17 @@ class MapEditor:
         try:
             self.ssectors = self._unpack_lump(SubSector, m["SSECTORS"].data)
             self.segs     = self._unpack_lump(Seg,       m["SEGS"].data)
+            self.nodes    = self._unpack_lump(Node,      m["NODES"].data)
             self.blockmap = m["BLOCKMAP"]
             self.reject   = m["REJECT"]
-            self.nodes    = self._unpack_lump(Node,      m["NODES"].data)
         except (KeyError, StructError):
             # nodes failed to build - we don't really care
             # TODO: this also "handles" (read: ignores) expanded zdoom nodes)
             self.ssectors = []
             self.segs     = []
-            self.blockmap = []
-            self.reject   = []
             self.nodes    = []
+            self.blockmap = Lump()
+            self.reject   = Lump()
 
     def load_gl(self, mapobj):
         """Load GL nodes entries from a map"""
@@ -235,7 +251,7 @@ class MapEditor:
             if line.front == -1: line.front = 0xFFFF
             if line.back  == -1: line.back  = 0xFFFF
         
-        m["_HEADER_"] = Lump("")
+        m["_HEADER_"] = self.header
         m["VERTEXES"] = Lump(join([x.pack() for x in self.vertexes]))
         m["THINGS"  ] = Lump(join([x.pack() for x in self.things  ]))
         m["LINEDEFS"] = Lump(join([x.pack() for x in linedefs     ]))
