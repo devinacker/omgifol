@@ -191,14 +191,12 @@ class WadIO:
         
         # Find the earliest available free space
         # (or, if free space reaches to the end of the file, use it)
-        print("write_free: data size is %u" % len(data))
         for p in self.calc_waste()[1]:
-            print("\tfound %u bytes at %x" % (p[1] - p[0], p[0]))
             if p[1] - p[0] >= len(data) or p[1] == pos:
                 pos = p[0]
                 self.basefile.seek(pos)
                 break
-        print("\twriting to %x" % pos)
+        
         self.basefile.write(data)
         return pos
 
