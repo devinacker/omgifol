@@ -163,6 +163,7 @@ class WadIO:
         """Remove an entry."""
         assert self.basefile
         del (self.entries[self.select(id)])
+        self.issafe = False
 
     def rename(self, id, new):
         """Rename an entry."""
@@ -180,18 +181,50 @@ class WadIO:
         self.basefile.seek(0, 2)
         self.basefile.write(data)
 
-    def insert(self, name, data, index=None):
+    def write_free(self, data):
+        """Write data to empty space in the file, if available,
+        otherwise write to the end of the file.
+        Returns the position that was written to.
+        """
+        self.basefile.seek(0, 2)
+        pos = self.basefile.tell()
+        
+        # Find the earliest available free space
+        # (or, if free space reaches to the end of the file, use it)
+        print("write_free: data size is %u" % len(data))
+        for p in self.calc_waste()[1]:
+            print("\tfound %u bytes at %x" % (p[1] - p[0], p[0]))
+            if p[1] - p[0] >= len(data) or p[1] == pos:
+                pos = p[0]
+                self.basefile.seek(pos)
+                break
+        print("\twriting to %x" % pos)
+        self.basefile.write(data)
+        return pos
+
+    def insert(self, name, data, index=None, use_free=True):
         """Insert a new entry at the optional index (defaults to
-        appending)."""
+        appending).
+        
+        If use_free is true, existing free space in the WAD will
+        be used, if possible."""
         assert self.basefile
         try:
             index = self.select(index)
         except:
             index = None
         self.issafe = False
-        self.basefile.seek(0, 2)
-        pos = self.basefile.tell()
-        self.basefile.write(data)
+        
+        if len(data) == 0:
+            pos = 0
+        elif use_free:
+            # write data to end of file or use free space if possible
+            pos = self.write_free(data)
+        else:
+            self.basefile.seek(0, 2)
+            pos = self.basefile.tell()
+            self.basefile.write(data)
+        
         if index is None:
             self.entries.append(Entry(pos, len(data), name))
         else:
@@ -206,14 +239,17 @@ class WadIO:
         id = self.select(id)
         if len(data) != self.entries[id].size:
             self.issafe = False
-        if len(data) <= self.entries[id].size:
+        
+        if len(data) == 0:
+            self.entries[i].ptr = 0
+        elif len(data) <= self.entries[id].size:
             self.write_at(self.entries[id].ptr, data)
         else:
-            # Currently, the lump simply gets placed at the end of the file.
-            # Instead, calc_waste() could be used to find empty space
-            self.basefile.seek(0, 2)
-            self.entries[id].ptr = self.basefile.tell()
-            self.basefile.write(data)
+            # temporarily mark existing entry as free, its current space will
+            # be combined with any adjacent free space
+            self.entries[id].size = 0
+            # write data to end of file or use free space if possible
+            self.entries[id].ptr = self.write_free(data)
         self.entries[id].size = len(data)
         self.basefile.flush()
 
@@ -221,12 +257,9 @@ class WadIO:
         """Save directory and header changes to the WAD file."""
         assert self.basefile
         if self.issafe: return
-        self.basefile.seek(0, 2)
-        endpos = self.basefile.tell()
-        for entry in self.entries:
-            self.basefile.write(entry.pack())
+        dir = join([e.pack() for e in self.entries])
         self.header.dir_len = len(self.entries)
-        self.header.dir_ptr = endpos
+        self.header.dir_ptr = self.write_free(dir)
         self.write_at(0, self.header.pack())
         self.basefile.flush()
         self.issafe = True
@@ -242,7 +275,7 @@ class WadIO:
         tmppath = os.path.join(os.path.dirname(fpath), tmppath)
         outwad = create_wad(tmppath)
         for i in range(len(self.entries)):
-            outwad.insert(self.entries[i].name, self.read(i))
+            outwad.insert(self.entries[i].name, self.read(i), use_free=False)
         outwad.save()
         outwad.close()
         self.close()
@@ -267,7 +300,8 @@ class WadIO:
         chunks.append((self.header.dir_ptr, self.header.dir_ptr + \
             len(self.entries)*Entry._fmtsize))
         for entry in self.entries:
-            chunks.append((entry.ptr, entry.ptr + entry.size))
+            if entry.size > 0:
+                chunks.append((entry.ptr, entry.ptr + entry.size))
         # Sort it so we can go through it linearly and check for gaps
         chunks.sort()
         positions = []

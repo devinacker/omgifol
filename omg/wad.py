@@ -21,13 +21,16 @@ class LumpGroup(OrderedDict):
         """Load entries from a WAD file. All lumps from the same
         section in that WAD is loaded (e.g. if this is a patch
         section, all patches in the WAD will be loaded."""
-        iw = WAD(); iw.load(filename)
-        self._lumps += deepcopy(iw.__dict__[self._sect_name]._lumps)
+        w = WAD(filename)
+        self += w.__dict__[self._name].copy()
 
-    def to_file(self, filename):
-        """Save group as a separate WAD file."""
+    def to_file(self, filename, use_free=True):
+        """Save group as a separate WAD file.
+        
+        If use_free is true, existing free space in the WAD will
+        be used, if possible."""
         w = WadIO(filename)
-        self.save_wadio(w)
+        self.save_wadio(w, use_free=use_free)
 
     def from_glob(self, globpattern):
         """Create lumps from files matching the glob pattern."""
@@ -35,10 +38,13 @@ class LumpGroup(OrderedDict):
             name = fixname(os.path.basename(p[:p.rfind('.')]))
             self[name] = self.lumptype(from_file=p)
 
-    def save_wadio(self, wadio):
-        """Save to a WadIO object."""
+    def save_wadio(self, wadio, use_free=True):
+        """Save to a WadIO object.
+        
+        If use_free is true, existing free space in the WAD will
+        be used, if possible."""
         for m in self:
-            wadio.insert(m, self[m].data)
+            wadio.insert(m, self[m].data, use_free=use_free)
 
     def copy(self):
         """Creates a deep copy."""
@@ -88,12 +94,15 @@ class MarkerGroup(LumpGroup):
                     inside = True
                     wadio.entries[i].been_read = True
 
-    def save_wadio(self, wadio):
-        """Save to a WadIO object."""
+    def save_wadio(self, wadio, use_free=True):
+        """Save to a WadIO object.
+        
+        If use_free is true, existing free space in the WAD will
+        be used, if possible."""
         if len(self) == 0:
             return
         wadio.insert(self.prefix.replace('*', ''), bytes())
-        LumpGroup.save_wadio(self, wadio)
+        LumpGroup.save_wadio(self, wadio, use_free=use_free)
         wadio.insert(self.suffix.replace('*', ''), bytes())
 
 
@@ -131,17 +140,20 @@ class HeaderGroup(LumpGroup):
             if not added:
                 i += 1
 
-    def save_wadio(self, wadio):
-        """Save to a WadIO object."""
+    def save_wadio(self, wadio, use_free=True):
+        """Save to a WadIO object.
+        
+        If use_free is true, existing free space in the WAD will
+        be used, if possible."""
         for h in self:
             hs = self[h]
             try:
-                wadio.insert(h, hs["_HEADER_"].data)
+                wadio.insert(h, hs["_HEADER_"].data, use_free=use_free)
             except KeyError:
                 wadio.insert(h, bytes())
             for t in self.tail:
                 if t in hs:
-                    wadio.insert(t, hs[t].data)
+                    wadio.insert(t, hs[t].data, use_free=use_free)
 
 
 class NameGroup(LumpGroup):
@@ -172,8 +184,6 @@ class TxdefGroup(NameGroup):
         a.from_lumps(self)
         a.from_lumps(other)
         return a.to_lumps()
-    def save_wadio(self, wadio):
-        NameGroup.save_wadio(self, wadio)
 
 
 #---------------------------------------------------------------------
@@ -278,7 +288,7 @@ class WAD:
             os.rename(filename, tmpfilename)
         w = WadIO(filename)
         for group in write_order:
-            self.__dict__[group].save_wadio(w)
+            self.__dict__[group].save_wadio(w, use_free=False)
         w.save()
         if use_backup:
             os.remove(tmpfilename)
