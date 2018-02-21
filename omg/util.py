@@ -4,7 +4,7 @@
 """
 
 from __future__  import print_function
-from fnmatch     import fnmatchcase as wccmp
+from fnmatch     import fnmatchcase as wccmp, filter as wcinlist
 from struct      import pack, unpack, calcsize
 from copy        import copy, deepcopy
 from collections import OrderedDict as od
@@ -107,7 +107,6 @@ def all(set):
 
 def inwclist(elem, seq):
     return any(wccmp(elem, x) for x in seq)
-
 
 #----------------------------------------------------------------------
 #

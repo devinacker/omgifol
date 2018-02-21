@@ -152,8 +152,11 @@ class HeaderGroup(LumpGroup):
             except KeyError:
                 wadio.insert(h, bytes())
             for t in self.tail:
-                if t in hs:
-                    wadio.insert(t, hs[t].data, use_free=use_free)
+                try:
+                    name = wcinlist(hs, t)[0]
+                    wadio.insert(name, hs[name].data, use_free=use_free)
+                except IndexError:
+                    pass
 
 
 class NameGroup(LumpGroup):

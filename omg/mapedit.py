@@ -197,7 +197,7 @@ class MapEditor:
                 self.behavior = m["BEHAVIOR"]
                 # optional script sources
                 try:
-                    self.scripts = m[m.find("SCRIPT*")[0]]
+                    self.scripts = m[wcinlist(m, "SCRIPT*")[0]]
                 except IndexError:
                     self.scripts = Lump()
             else:
