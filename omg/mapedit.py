@@ -149,11 +149,30 @@ class MapEditor:
     """Doom map editor
 
     Data members:
+        header        Lump object consisting of data in map header (if any)
         vertexes      List containing Vertex objects
         sidedefs      List containing Sidedef objects
-        linedefs      List containing Linedef objects
+        linedefs      List containing Linedef or ZLinedef objects
         sectors       List containing Sector objects
-        things        List containing Thing objects"""
+        things        List containing Thing or ZThing objects
+    
+    Data members (Hexen/ZDoom formats only):
+        behavior      Lump object containing compiled ACS scripts
+        scripts       Lump object containing ACS script source
+    
+    Other members:
+        Thing         alias to Thing or ZThing class, depending on format
+        Linedef       alias to Linedef or ZLinedef class, depending on format
+        
+    Currently present but unused:
+        segs          List containing Seg objects
+        ssectors      List containing SubSector objects
+        nodes         List containing Node objects
+        blockmap      Lump object containing blockmap data
+        reject        Lump object containing reject table data
+        (These five lumps are not updated when saving; you will need to use
+        an external node builder utility)
+        """
 
     def __init__(self, from_lumps=None):
         """Create new, optionally from a lump group"""

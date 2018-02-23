@@ -1,0 +1,29 @@
+0.4.0 (2018/02/22)
+
+add support for importing/exporting/editing sound effect lumps
+add 'Thing' and 'Linedef' members to MapEditor class (aliases to the
+	thing and linedef classes used by the current map format)
+add support for data stored inside map header lumps (e.g. FraggleScript)
+add ability for WAD and WadIO classes to use empty space in WAD file, if
+	possible ('use_free' argument in relevant methods)
+enforce maximum size for patch lumps
+remove some old chr() calls for Python 3 users
+fix previously broken WAD.load method
+fix palette index 0 in patches becoming transparent when exporting
+fix some lumps falsely being loaded as maps (e.g. aaliens.wad "LOADACS",
+	which was followed by a "SCRIPTS" lump and thus detected as a map)
+
+0.3.0 (2017/10/06)
+
+add support for Python 3.x (experimental; 3.5.0 or higher recommended)
+add support for Hexen / ZDoom maps
+add better map loading (supports names other than ExMx and MAPxx,
+	doesn't mistake MAPINFO for an actual map)
+add better support for "limit removing" maps
+add tall patch support
+add support for importing/exporting RGBA images (converted to the WAD's
+	256-color palette on import, but can contain true transparency)
+add better handling of missing map data
+add draw_sector and misc. helper functions to MapEditor [jmickle66666666]
+add ability to individually change single flags (by name) with MapEditor
+fix a colormap generation bug and add Colormap.set_position [jmickle66666666]

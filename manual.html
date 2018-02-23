@@ -35,15 +35,18 @@
 </td></tr></table>
 <a name="Installation"></a><h2>Installation</h2>
 <ol><li> Install Python 2.7 or 3.x, which can be downloaded from <a href="http://python.org" class='external' title="http://python.org">http://python.org</a>
-</li><li> Extract the files in the Omgifol package into a directory named "omg" in <em>pythondir</em>/Lib/site-packages (replace <em>pythondir</em> with the directory where Python is installed).
+</li><li> Use pip to install Omgifol: <tt>pip install omgifol</tt>
+</li><li> Or, if pip is unavailable, extract the "omg" directory in the Omgifol package into <em>pythondir</em>/Lib/site-packages (replace <em>pythondir</em> with the directory where Python is installed).
 </li></ol>
 <p>Optionally:
 
 </p>
-<ol><li> Install the <a href='http://www.pythonware.com/products/pil/' class='external' title="http://www.pythonware.com/products/pil/">Python Imaging Library</a><span class='urlexpansion'> (<i>http://www.pythonware.com/products/pil/</i>)</span> or the newer <a href='https://python-pillow.github.io' class='external' title="https://python-pillow.github.io">Pillow</a><span class='urlexpansion'> (<i>https://python-pillow.github.io</i>)</span>. This is required to save or load images.
-</li><li> Install <a href='http://psyco.sourceforge.net/' class='external' title="http://psyco.sourceforge.net/">Psyco</a><span class='urlexpansion'> (<i>http://psyco.sourceforge.net/</i>)</span>. This can make Omgifol quite a bit faster, typically 2-10x.
+<ol><li> Install the <a href='https://python-pillow.github.io' class='external' title="https://python-pillow.github.io">Pillow library</a><span class='urlexpansion'> (<i>https://python-pillow.github.io</i>)</span>. This is required to import or export images.
+</li>
+<li> Install the <a href='https://pysoundfile.readthedocs.io' class='external' title="https://pysoundfile.readthedocs.io">PySoundFile library</a><span class='urlexpansion'> (<i>https://pysoundfile.readthedocs.io</i>)</span>. This is required to import or export sound files.
+</li>
+</ol>
 
-</li></ol>
 <a name="Using_Omgifol"></a><h2>Using Omgifol</h2>
 <p>At the beginning of an interactive session, or as the first line in a Python script file, enter
 </p>
@@ -176,7 +179,7 @@ also get merged this way when two <tt >WAD</tt > objects are merged on the top l
 <pre> w.data['FOOF'] = Lump('Hello!')
 </pre>
 <a name="Graphic_lumps"></a><h3>Graphic lumps</h3>
-<p>There are subclasses of <tt >Lump</tt > for different types of lumps. Currently, only two of these provide special functionality: <tt >Graphic</tt > and <tt >Flat</tt >.
+<p>There are subclasses of <tt >Lump</tt > for different types of lumps. Currently, only these provide special functionality: <tt >Graphic</tt >, <tt >Flat</tt >, and <tt>Sound</tt>.
 
 </p><p><tt >Graphic</tt >, used to represent Doom format graphics, provides the following settable attributes:
 </p>
@@ -197,6 +200,23 @@ also get merged this way when two <tt >WAD</tt > objects are merged on the top l
 </pre>
 <p>For the argument lists used by these functions, refer to the code and the inline documenation in lump.py.
 </p><p><tt >Flat</tt > works similarly to <tt >Graphic</tt >, but handles format conversions slightly differently.
+
+</p><p><tt >Sound</tt >, used to represent Doom format sounds, provides the following settable attributes:
+</p>
+<pre> .format              Sound effect format (0-3)
+ .length               Length of sound in samples
+ .sample_rate          Sample rate for digitized sounds (defaults to 11025)
+ .midi_bank            MIDI patch bank number (formats 1-2 only)
+ .midi_patch           MIDI patch number (formats 1-2 only)
+</pre>
+<p><tt >Graphic</tt > defines the following methods in adddition to those defined by <tt >Lump</tt >:
+</p>
+<pre> .from_raw             Load from a raw sound file
+ .to_raw               Return the sound file converted to raw samples
+ .from_file            Load from a sound file
+ .to_file              Save the sound to a file
+</pre>
+
 
 </p>
 <a name="Editors"></a><h2>Editors</h2>
