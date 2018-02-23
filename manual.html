@@ -203,13 +203,13 @@ also get merged this way when two <tt >WAD</tt > objects are merged on the top l
 
 </p><p><tt >Sound</tt >, used to represent Doom format sounds, provides the following settable attributes:
 </p>
-<pre> .format              Sound effect format (0-3)
+<pre> .format               Sound effect format (0-3)
  .length               Length of sound in samples
  .sample_rate          Sample rate for digitized sounds (defaults to 11025)
  .midi_bank            MIDI patch bank number (formats 1-2 only)
  .midi_patch           MIDI patch number (formats 1-2 only)
 </pre>
-<p><tt >Graphic</tt > defines the following methods in adddition to those defined by <tt >Lump</tt >:
+<p><tt >Sound</tt > defines the following methods in adddition to those defined by <tt >Lump</tt >:
 </p>
 <pre> .from_raw             Load from a raw sound file
  .to_raw               Return the sound file converted to raw samples
