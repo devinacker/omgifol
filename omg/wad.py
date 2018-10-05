@@ -200,6 +200,7 @@ _maptail    = ['THINGS',   'LINEDEFS', 'SIDEDEFS', # Must be in order
                'VERTEXES', 'SEGS',     'SSECTORS',
                'NODES',    'SECTORS',  'REJECT',
                'BLOCKMAP', 'BEHAVIOR', 'SCRIPT*']
+_udmfmaptail  = ['TEXTMAP', 'BEHAVIOR', 'SCRIPT*', 'ENDMAP']
 _glmaptail    = ['GL_VERT', 'GL_SEGS', 'GL_SSECT', 'GL_NODES']
 _graphics     = ['TITLEPIC', 'CWILV*', 'WI*', 'M_*',
                  'INTERPIC', 'BRDR*',  'PFUB?', 'ST*',
@@ -217,6 +218,7 @@ defstruct = [
     [MarkerGroup, 'ztextures', Graphic, 'TX'],
     [HeaderGroup, 'maps',   Lump, _maptail],
     [HeaderGroup, 'glmaps', Lump, _glmaptail],
+    [HeaderGroup, 'udmfmaps', Lump, _udmfmaptail],
     [NameGroup,   'music',    Music, ['D_*']],
     [NameGroup,   'sounds',   Sound, ['DS*', 'DP*']],
     [TxdefGroup,  'txdefs',   Lump,  ['TEXTURE?', 'PNAMES']],
@@ -224,7 +226,7 @@ defstruct = [
     [NameGroup,   'data',     Lump,  ['*']]
 ]
 
-write_order = ['data', 'colormaps', 'maps', 'glmaps', 'txdefs',
+write_order = ['data', 'colormaps', 'maps', 'glmaps', 'udmfmaps', 'txdefs',
     'sounds', 'music', 'graphics', 'sprites', 'patches', 'flats',
     'ztextures']
 
