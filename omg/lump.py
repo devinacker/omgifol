@@ -630,6 +630,7 @@ class Flat(Graphic):
         sz = len(self.data)
         if sz == 4096: return (64, 64)
         if sz == 4160: return (64, 65)
+        if sz == 8192: return (64, 128)
         root = int(sz**0.5)
         if root**2 != sz:
             raise TypeError("unable to determine size: not a square number")
