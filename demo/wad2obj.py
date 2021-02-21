@@ -7,13 +7,21 @@ modern game engine.
 """
 
 # python
-import math, argparse, os, sys
+import math
+import argparse
+import os
+import sys
 
 # PIL
 from PIL import Image
 
 # local
-from omg import txdef, wad, mapedit, util
+from omg import (
+    txdef,
+    wad,
+    mapedit,
+    lineinfo
+)
 
 # Constants
 DEFAULT_MTL_TEXT = """Ka 1.000000 1.000000 1.000000
@@ -393,7 +401,7 @@ def main():
     # export the textures first, so we know all their sizes
     textureNames, textureSizes = writemtl(inwad)
 
-    maps = util.find(inwad.maps, args.maps)
+    maps = inwad.maps.find(args.maps)
     if len(maps) == 0:
         print("No maps matching pattern '%s' were found." % (args.maps))
     else:
