@@ -20,7 +20,6 @@ from omg import (
     txdef,
     wad,
     mapedit,
-    lineinfo
 )
 
 # Constants
@@ -31,6 +30,7 @@ Tr 1.000000
 illum 1
 Ns 0.000000
 """
+
 
 def linked_a_chain_from(chains, remaining_segments):
     for chain in chains:
@@ -75,11 +75,11 @@ class Polygon:
         Feed us one line segment at a time, then call combineSegments()
         """
 
-        self.segments.append((p1,p2,a,b))
+        self.segments.append((p1, p2, a, b))
 
     def combineSegments(self):
-        """
-        Take all line segments we were given and try to combine them into faces.
+        """ Take all line segments we were given and try to combine them into
+        faces.
         """
 
         remaining_segments = list(self.segments)
@@ -109,24 +109,29 @@ class Polygon:
             [(segment[0].x/64., segment[0].y/64.) for segment in chain])
             for chain in chains]
 
+
 def objmap(wad, name, filename, textureNames, textureSizes, centerVerts):
     edit = mapedit.MapEditor(wad.maps[name])
 
     # first lets get into the proper coordinate system
     v = edit.vertexes[0]
-    bb_min = mapedit.Vertex(v.x,v.y)
-    bb_max = mapedit.Vertex(v.x,v.y)
+    bb_min = mapedit.Vertex(v.x, v.y)
+    bb_max = mapedit.Vertex(v.x, v.y)
     for v in edit.vertexes:
         v.x = -v.x
-        if bb_max.x > v.x: bb_max.x = v.x
-        if bb_max.y > v.y: bb_max.y = v.y
-        if bb_min.x < v.x: bb_min.x = v.x
-        if bb_min.y < v.y: bb_min.y = v.y
+        if bb_max.x > v.x:
+            bb_max.x = v.x
+        if bb_max.y > v.y:
+            bb_max.y = v.y
+        if bb_min.x < v.x:
+            bb_min.x = v.x
+        if bb_min.y < v.y:
+            bb_min.y = v.y
 
     if centerVerts:
         center = mapedit.Vertex((bb_min.x+bb_max.x)/2, (bb_min.y+bb_max.y)/2)
     else:
-        center = mapedit.Vertex(0,0)
+        center = mapedit.Vertex(0, 0)
 
     vi = 1  # vertex index (starting at 1 for the 1st vertex)
     vertexes = []
@@ -152,7 +157,13 @@ def objmap(wad, name, filename, textureNames, textureSizes, centerVerts):
         # at 1) note that we stretch them to compensate for Doom's non-square
         # pixel display
         for v in vertexes:
-            out.write("v %g %g %g\n" % (v[0]-center.x, v[1]*1.2, v[2]-center.y))
+            out.write(
+                "v %g %g %g\n" % (
+                    v[0]-center.x,
+                    v[1]*1.2,
+                    v[2]-center.y
+                )
+            )
 
         for polyindex, poly in enumerate(polys):
             if not poly.texture:
@@ -172,18 +183,24 @@ def objmap(wad, name, filename, textureNames, textureSizes, centerVerts):
                 texture_name = "None"
             out.write("usemtl %s\n" % texture_name)
 
-            for vindexes,textureCoords in zip(
+            for vindexes, textureCoords in zip(
                     poly.getFaces(),
                     poly.getTextureCoords()):
 
                 tindexes = []
-                for u,v in textureCoords:
+                for u, v in textureCoords:
                     out.write("vt %g %g\n" % (u, v))
                     tindexes.append(ti)
                     ti += 1
                 out.write(
-                        "f %s\n" % " ".join([
-                            "%s/%s" % (v,t) for v,t in zip(vindexes,tindexes)]))
+                        "f %s\n" % " ".join(
+                            [
+                                "%s/%s" % (v, t)
+                                for v, t in zip(vindexes, tindexes)
+                            ]
+                        )
+                )
+
 
 def _polygons_with_line_definitions(edit, vi, vertexes, textureSizes, polys):
     for line in edit.linedefs:
@@ -201,12 +218,12 @@ def _polygons_with_line_definitions(edit, vi, vertexes, textureSizes, polys):
             front_upper_left = vi+1
             front_lower_right = vi+2
             front_upper_right = vi+3
-            vertexes.append((p1.x, sector1.z_floor, p1.y)) # lower left
-            vertexes.append((p1.x, sector1.z_ceil,  p1.y)) # upper left
-            vertexes.append((p2.x, sector1.z_floor, p2.y)) # lower right
-            vertexes.append((p2.x, sector1.z_ceil,  p2.y)) # upper right
+            vertexes.append((p1.x, sector1.z_floor, p1.y))  # lower left
+            vertexes.append((p1.x, sector1.z_ceil,  p1.y))  # upper left
+            vertexes.append((p2.x, sector1.z_floor, p2.y))  # lower right
+            vertexes.append((p2.x, sector1.z_ceil,  p2.y))  # upper right
 
-            if not line.two_sided and side1.tx_mid!='-': #line.impassable:
+            if not line.two_sided and side1.tx_mid != '-':  # line.impassable:
                 polys.append(_poly_from_components(
                         side1, sector1,
                         textureSizes, width, line,
@@ -228,17 +245,17 @@ def _polygons_with_line_definitions(edit, vi, vertexes, textureSizes, polys):
             back_upper_left = vi+1
             back_lower_right = vi+2
             back_upper_right = vi+3
-            vertexes.append((p1.x, sector2.z_floor, p1.y)) # lower left
-            vertexes.append((p1.x, sector2.z_ceil,  p1.y)) # upper left
-            vertexes.append((p2.x, sector2.z_floor, p2.y)) # lower right
-            vertexes.append((p2.x, sector2.z_ceil,  p2.y)) # upper right
+            vertexes.append((p1.x, sector2.z_floor, p1.y))  # lower left
+            vertexes.append((p1.x, sector2.z_ceil,  p1.y))  # upper left
+            vertexes.append((p2.x, sector2.z_floor, p2.y))  # lower right
+            vertexes.append((p2.x, sector2.z_ceil,  p2.y))  # upper right
 
-            if not line.two_sided and side2.tx_mid!='-': #line.impassable:
+            if not line.two_sided and side2.tx_mid != '-':  # line.impassable:
                 polys.append(_poly_from_components(
                         side2, sector2,
                         textureSizes, width, line,
-                        back_lower_left,back_lower_right,
-                        back_upper_right,back_upper_left))
+                        back_lower_left, back_lower_right,
+                        back_upper_right, back_upper_left))
 
             sector2.floor.addSegment(p2, p1, back_lower_right, back_lower_left)
             sector2.ceil.addSegment(p1, p2, back_upper_left, back_upper_right)
@@ -252,7 +269,7 @@ def _polygons_with_line_definitions(edit, vi, vertexes, textureSizes, polys):
                 poly = Polygon(side1.tx_low)
                 # the front (sector1) is lower than the back (sector2)
                 height = sector2.z_floor - sector1.z_floor
-                tsize = textureSizes.get(side1.tx_low, (64,64))
+                tsize = textureSizes.get(side1.tx_low, (64, 64))
                 tw = width/float(tsize[0])
                 th = height/float(tsize[1])
                 tx = side1.off_x/float(tsize[0])
@@ -261,13 +278,14 @@ def _polygons_with_line_definitions(edit, vi, vertexes, textureSizes, polys):
                 else:
                     ty = -side1.off_y/float(tsize[1])
                 poly.addFace(
-                        (front_lower_left,front_lower_right,
-                            back_lower_right,back_lower_left),
-                        [(tx,ty),(tw+tx,ty),(tw+tx,th+ty),(tx,th+ty)])
+                        (front_lower_left, front_lower_right,
+                            back_lower_right, back_lower_left),
+                        [(tx, ty), (tw+tx, ty), (tw+tx, th+ty), (tx, th+ty)])
                 polys.append(poly)
 
             # skip the upper texture if it is '-'
-            # also skip the upper if the sectors on both sides have sky ceilings
+            # also skip the upper if the sectors on both sides have sky
+            # ceilings
             if (
                     side1.tx_up != '-'
                     and not (
@@ -278,18 +296,32 @@ def _polygons_with_line_definitions(edit, vi, vertexes, textureSizes, polys):
                 poly = Polygon(side1.tx_up)
                 # the front (sector1) is higher than the back (sector2)
                 height = sector1.z_ceil - sector2.z_ceil
-                tsize = textureSizes[side1.tx_up]
-                tw = width/float(tsize[0])
-                th = height/float(tsize[1])
-                tx = side1.off_x/float(tsize[0])
-                if line.upper_unpeg:
-                    ty = (tsize[1]-height-side1.off_y)/float(tsize[1])
-                else:
-                    ty = -side1.off_y/float(tsize[1])
+
+                # CRASH
+                try:
+                    tsize = textureSizes[side1.tx_up]
+                    tw = width/float(tsize[0])
+                    th = height/float(tsize[1])
+                    tx = side1.off_x/float(tsize[0])
+                    if line.upper_unpeg:
+                        ty = (tsize[1]-height-side1.off_y)/float(tsize[1])
+                    else:
+                        ty = -side1.off_y/float(tsize[1])
+                except KeyError:
+                    tx = 0
+                    ty = 0
+                    tw = 0
+                    th = 0
+                    continue
                 poly.addFace(
-                        (back_upper_left,back_upper_right,
-                            front_upper_right,front_upper_left), \
-                             [(tx,ty),(tw+tx,ty),(tw+tx,th+ty),(tx,th+ty)])
+                    (
+                        back_upper_left,
+                        back_upper_right,
+                        front_upper_right,
+                        front_upper_left
+                    ),
+                    [(tx, ty), (tw+tx, ty), (tw+tx, th+ty), (tx, th+ty)]
+                )
                 polys.append(poly)
 
 def _poly_from_components(side1, sector1, textureSizes, width, line,
@@ -326,7 +358,7 @@ def writemtl(wad):
     # + wad.patches.items() # + wad.graphics.items() + wad.sprites.items()
     textures = list(wad.flats.items())
 
-    for name,texture in textures:
+    for name, texture in textures:
         texture.to_file(name+".png")
         _texture_written_to(out, name)
         names.append(name)
@@ -397,6 +429,7 @@ def main():
 
     # lets make sure all output files are written here
     os.chdir(args.output)
+
 
     # export the textures first, so we know all their sizes
     textureNames, textureSizes = writemtl(inwad)
