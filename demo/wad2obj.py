@@ -148,7 +148,7 @@ def objmap(wad, name, filename, textureNames, textureSizes, centerVerts):
 
         for polyindex, poly in enumerate(polys):
             if not poly.texture:
-                print "Polygon with no texture?", poly
+                print("Polygon with no texture?", poly)
                 continue
 
             if poly.texture == '-' or poly.texture == 'F_SKY1':
@@ -160,7 +160,7 @@ def objmap(wad, name, filename, textureNames, textureSizes, centerVerts):
 
             texture_name = poly.texture
             if poly.texture not in textureNames:
-                print "Missing texture", poly.texture
+                print("Missing texture", poly.texture)
                 texture_name = "None"
             out.write("usemtl %s\n" % texture_name)
 
@@ -316,7 +316,7 @@ def writemtl(wad):
     textureSizes = {}
 
     # + wad.patches.items() # + wad.graphics.items() + wad.sprites.items()
-    textures = wad.flats.items()
+    textures = list(wad.flats.items())
 
     for name,texture in textures:
         texture.to_file(name+".png")
@@ -324,7 +324,7 @@ def writemtl(wad):
         names.append(name)
 
     t = txdef.Textures(wad.txdefs)
-    for name,texture_definition in t.items():
+    for name,texture_definition in list(t.items()):
         image = Image.new(
                 'RGB',
                 (texture_definition.width, texture_definition.height))
@@ -333,8 +333,8 @@ def writemtl(wad):
             # sometimes there are lower case letters!?
             patchdef.name = patchdef.name.upper()
             if patchdef.name not in wad.patches:
-                print ("ERROR: Cannot find patch named '%s' for "
-                        "texture_definition '%s'" % (patchdef.name, name))
+                print(("ERROR: Cannot find patch named '%s' for "
+                        "texture_definition '%s'" % (patchdef.name, name)))
                 continue
             patch = wad.patches[patchdef.name]
             stamp = patch.to_Image()
@@ -377,14 +377,14 @@ def parse_args():
 def main():
     args = parse_args()
 
-    print "Loading %s..." % args.source_wad
+    print("Loading %s..." % args.source_wad)
     inwad = wad.WAD()
     inwad.from_file(args.source_wad)
 
     if args.list:
-        print "Found %d maps:" % len(inwad.maps)
-        for mapName in inwad.maps.keys():
-            print "  %s" % mapName
+        print("Found %d maps:" % len(inwad.maps))
+        for mapName in list(inwad.maps.keys()):
+            print("  %s" % mapName)
         sys.exit(0)
 
     # lets make sure all output files are written here
@@ -395,12 +395,12 @@ def main():
 
     maps = util.find(inwad.maps, args.maps)
     if len(maps) == 0:
-        print "No maps matching pattern '%s' were found." % (args.maps)
+        print("No maps matching pattern '%s' were found." % (args.maps))
     else:
-        print "Found %d maps matching pattern '%s'" % (len(maps), args.maps)
+        print("Found %d maps matching pattern '%s'" % (len(maps), args.maps))
         for name in maps:
             objfile = name+".obj"
-            print "Writing %s" % objfile
+            print("Writing %s" % objfile)
             objmap(inwad, name, objfile, textureNames, textureSizes, args.center)
 
 """
