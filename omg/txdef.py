@@ -115,6 +115,6 @@ class Textures(OrderedDict):
         """Create a simple texture with a given name, from a given lump."""
         self[name] = TextureDef()
         self[name].patches.append(PatchDef())
-        self[name].patches[0].name = name
+        self[name].patches[0].name = self[name].name = name
         self[name].width, self[name].height = plump.dimensions
 
