@@ -7,8 +7,9 @@ from omg import *
 from omg.txdef import *
 import struct
 
+iwad = WAD('doom2.wad')
 out  = WAD()
-editor = omg.txdef.Textures()
+editor = omg.txdef.Textures(iwad.txdefs)
 
 for i in range(0,256):
 
