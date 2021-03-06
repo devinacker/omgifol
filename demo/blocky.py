@@ -39,5 +39,8 @@ for i in range(0,256):
     flat.load_raw(bytes([i])*4096)
     out.flats[name] = flat
 
+# fix flats in vanilla
+out.flats.prefix='FF*_START'
+
 out.txdefs = editor.to_lumps()
 out.to_file('out.wad')
