@@ -15,11 +15,12 @@ for i in range(0,256):
 
     # generate raw patch data for palette index i
     topdelta = 0
-    length = 64
+    length = 128
     unused = 0
     data = i
-    post = struct.pack('<BBB64sB', topdelta, length, unused, bytes([data])*64, unused)
-    width = height = 64
+    post = struct.pack('<BBB{}sB'.format(length), topdelta, length, unused, bytes([data])*length, unused)
+    width = 64
+    height = 128
     leftoffs = topoffs = 0
     postoffs = 264
     patch = struct.pack('<HHhh', width, height, leftoffs, topoffs) \
