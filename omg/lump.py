@@ -18,7 +18,6 @@ except:
 import os
 import omg.palette
 from omg.util import *
-from omg      import six
 
 class Lump(object):
     """Basic lump class. Instances of Lump (and its subclasses)
@@ -455,7 +454,7 @@ class Graphic(Lump):
         """Load a raw 8-bpp image, converting to the Doom picture format
         (used by all graphics except flats)"""
         pal = pal or omg.palette.default
-        pixels = [i if i != pal.tran_index else None for i in six.iterbytes(data)]
+        pixels = [i if i != pal.tran_index else None for i in data]
         self.from_pixels(pixels, width, height, x_offset, y_offset)
 
     def to_pixels(self):
@@ -471,18 +470,18 @@ class Graphic(Lump):
             if pointer >= len(data):
                 continue
 
-            while six.indexbytes(data, pointer) != 0xff:
-                offset = six.indexbytes(data, pointer)
+            while data[pointer] != 0xff:
+                offset = data[pointer]
                 if offset <= y:
                     y += offset # for tall patches
                 else:
                     y = offset				
-                post_length = six.indexbytes(data, pointer+1)
+                post_length = data[pointer + 1]
                 op = y*width + x
                 for p in range(pointer + 3, pointer + post_length + 3):
                     if op >= len(output) or p >= len(data):
                         break
-                    output[op] = six.indexbytes(data, p)
+                    output[op] = data[p]
                     op += width
                 pointer += post_length + 4
         return output
@@ -531,8 +530,8 @@ class Graphic(Lump):
         width, height = im.size
         xoff, yoff = (width // 2)-1, height-5
         if im.mode == "RGB":
-            pixels = join([six.int2byte(self.palette.match(unpack('BBB', \
-                pixels[i*3:(i+1)*3]))) for i in range(width*height)])
+            pixels = bytes([self.palette.match(unpack('BBB', \
+                pixels[i*3:(i+1)*3])) for i in range(width*height)])
 
             self.from_raw(pixels, width, height, xoff, yoff, self.palette)
         
@@ -552,13 +551,13 @@ class Graphic(Lump):
                 raise TypeError("palette mode must be 'RGB' or 'RGBA'")
             
             if translate:
-                R = [c for c in six.iterbytes(srcpal[0::palsize])]
-                G = [c for c in six.iterbytes(srcpal[1::palsize])]
-                B = [c for c in six.iterbytes(srcpal[2::palsize])]
+                R = [c for c in srcpal[0::palsize]]
+                G = [c for c in srcpal[1::palsize]]
+                B = [c for c in srcpal[2::palsize]]
 
                 srcpal = zip(R, G, B)
-                lexicon = [six.int2byte(self.palette.match(c)) for c in srcpal]
-                pixels = join([lexicon[b] for b in six.iterbytes(pixels)])
+                lexicon = [self.palette.match(c) for c in srcpal]
+                pixels = bytes([lexicon[b] for b in pixels])
             else:
                 # Simply copy pixels. However, make sure to translate
                 # all colors matching the transparency color to the
@@ -566,12 +565,12 @@ class Graphic(Lump):
                 # aren't consistent in choice of position for the
                 # transparent entry.
                 packed_color = pack("BBB", *self.palette.tran_color)
+                packed_index = pack("B", self.palette.tran_index)
                 ri = 0
                 while ri != -1:
                     ri = srcpal.find(packed_color, ri+palsize)
                     if not ri % palsize and ri//palsize != self.palette.tran_index:
-                        pixels = pixels.replace(six.int2byte(ri//palsize),
-                            six.int2byte(self.palette.tran_index))
+                        pixels = pixels.replace(pack("B", ri//palsize), packed_index)
 
             self.from_raw(pixels, width, height, xoff, yoff, self.palette)
         else:
@@ -611,14 +610,13 @@ class Graphic(Lump):
 
     def translate(self, pal):
         """Translate (in-place) the graphic to another palette."""
-        lexicon = [six.int2byte(pal.match(self.palette.colors[i])) for i in range(256)]
-        lexicon[self.palette.tran_index] = six.int2byte(pal.tran_index)
+        lexicon = [pal.match(self.palette.colors[i]) for i in range(256)]
+        lexicon[self.palette.tran_index] = pal.tran_index
         if isinstance(self, Flat):
-            self.data = join([lexicon[b] for b in self.data])
+            self.data = bytes([lexicon[b] for b in self.data])
         else:
             raw = self.to_raw()
-            #raw = raw.replace(six.int2byte(self.palette.tran_index), six.int2byte(pal.tran_index))
-            self.load_raw(join([lexicon[b] for b in raw]),
+            self.load_raw(bytes([lexicon[b] for b in raw]),
                 self.width, self.height,
                 self.x_offset, self.y_offset)
 

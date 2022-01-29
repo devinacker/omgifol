@@ -8,7 +8,6 @@ from fnmatch     import fnmatchcase as wccmp, filter as wcinlist
 from struct      import pack, unpack, calcsize
 from copy        import copy, deepcopy
 from collections import OrderedDict as od
-from omg         import six
 
 _pack = pack
 _unpack = unpack
@@ -19,7 +18,7 @@ class OrderedDict(od):
     
     - dicts can be added together
     - find and rename methods
-    - items(), keys(), and values() return normal lists in both Python 2 and 3
+    - items(), keys(), and values() return normal lists
     """
 
     def __init__(self, source=None):
@@ -37,25 +36,16 @@ class OrderedDict(od):
         return self
 
     def items(self):
-        if six.PY3:
-            # return list instead of odict_items
-            return [i for i in od.items(self)]
-        else:
-            return od.items(self)
+        # return list instead of odict_items
+        return [i for i in od.items(self)]
 
     def keys(self):
-        if six.PY3:
-            # return list instead of odict_keys
-            return [i for i in od.keys(self)]
-        else:
-            return od.keys(self)
+        # return list instead of odict_keys
+        return [i for i in od.keys(self)]
 
     def values(self):
-        if six.PY3:
-            # return list instead of odict_values
-            return [i for i in od.values(self)]
-        else:
-            return od.values(self)
+        # return list instead of odict_values
+        return [i for i in od.values(self)]
 
     def find(self, pattern):
         """Find all items that match the given pattern (supporting
@@ -124,7 +114,7 @@ _trans_table = "".join(_trans_table)
 def zpad(chars):
     """Pad a string with zero bytes, up until a length of 8.
     The string is truncated if longer than 8 bytes."""
-    return pack('8s', six.b(chars))
+    return pack('8s', chars.encode('ascii'))
     
 def zstrip(chars):
     """

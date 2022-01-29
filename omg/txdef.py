@@ -1,7 +1,6 @@
 from omg.lump import Lump
 from omg.util import *
 from omg.wad  import TxdefGroup
-from omg      import six
 
 TextureDef = make_struct(
   "TextureDef",
@@ -84,7 +83,7 @@ class Textures(OrderedDict):
                 if p.name not in used_pnames:
                     used_pnames[p.name] = len(used_pnames)
                 p.id = used_pnames[p.name]
-        pnmap = sorted([(i, name) for (name, i) in six.iteritems(used_pnames)])
+        pnmap = sorted([(i, name) for (name, i) in used_pnames.items()])
         pnames = pack32(len(pnmap)) + \
             bytes().join(zpad(safe_name(name)) for i, name in pnmap)
 
