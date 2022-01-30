@@ -1,4 +1,5 @@
-from __future__ import print_function
+#!/usr/bin/env python
+
 from sys import argv
 from omg import *
 from omg.mapedit import *

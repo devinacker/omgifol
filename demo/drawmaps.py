@@ -1,4 +1,5 @@
-from __future__ import print_function
+#!/usr/bin/env python
+
 from omg import *
 import sys
 from PIL import Image, ImageDraw
@@ -22,8 +23,8 @@ def drawmap(wad, name, filename, width, format):
     ymin = int(ymin * scale)
 
     for v in edit.vertexes:
-        v.x = v.x * scale
-        v.y = -v.y * scale
+        v.x = int(v.x * scale)
+        v.y = int(-v.y * scale)
 
     im = Image.new('RGB', ((xmax - xmin) + 8, (ymax - ymin) + 8), (255,255,255))
     draw = ImageDraw.Draw(im)

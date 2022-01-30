@@ -1,4 +1,5 @@
-from __future__ import print_function
+#!/usr/bin/env python
+
 import omg, sys
 
 if (len(sys.argv) < 3):
