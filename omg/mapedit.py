@@ -5,145 +5,232 @@ from omg.wad import NameGroup
 import omg.lineinfo as lineinfo
 import omg.thinginfo as thinginfo
 
-Vertex = make_struct(
-  "Vertex", """Represents a map vertex""",
-  [["x", "h", 0],
-   ["y", "h", 0]]
-)
+class Vertex(WADStruct):
+    """Represents a map vertex"""
+    _fields_ = [
+        ("x", ctypes.c_int16),
+        ("y", ctypes.c_int16)
+    ]
 
-GLVertex = make_struct(
-  "GLVertex", """Represents a map GL vertex""",
-  [["x", "i", 0],
-   ["y", "i", 0]]
-)
+class GLVertex(WADStruct):
+    """Represents a map GL vertex"""
+    _fields_ = [
+        ("x", ctypes.c_int32),
+        ("y", ctypes.c_int32)
+    ]
 
-Sidedef = make_struct(
-  "Sidedef", """Represents a map sidedef""",
-  [["off_x",  'h',  0  ],
-   ["off_y",  'h',  0  ],
-   ["tx_up",  '8s', "-"],
-   ["tx_low", '8s', "-"],
-   ["tx_mid", '8s', "-"],
-   ["sector", 'H',   0 ]]
-)
+class Sidedef(WADStruct):
+    """Represents a map sidedef"""
+    _fields_ = [
+        ("off_x",  ctypes.c_int16),
+        ("off_y",  ctypes.c_int16),
+        ("tx_up",  ctypes.c_char * 8),
+        ("tx_low", ctypes.c_char * 8),
+        ("tx_mid", ctypes.c_char * 8),
+        ("sector", ctypes.c_uint16)
+    ]
+    
+    def __init__(self, *args, **kwargs):
+        self.tx_up = self.tx_low = self.tx_mid = "-"
+        super().__init__(*args, **kwargs)
 
-Linedef = make_struct(
-  "Linedef", """Represents a map linedef""",
-  [["vx_a",   'H',  0],
-   ["vx_b",   'H',  0],
-   ["flags",  'H',  0],
-   ["action", 'H',  0],
-   ["tag",    'H',  0],
-   ["front",  'H', -1],
-   ["back",   'H', -1]],
-  ["impassable", "block_monsters", "two_sided",
-   "upper_unpeg", "lower_unpeg", "secret",
-   "block_sound", "invisible", "automap"]
-)
+class Linedef(WADStruct):
+    """
+    Represents a map linedef
+    
+    Linedef.NONE is the placeholder value for unused sidedefs.
+    Using the value -1 is no longer supported.
+    """
+    NONE = 0xffff
+    
+    _flags_ = [
+        ("impassable",     1),
+        ("block_monsters", 1),
+        ("two_sided",      1),
+        ("upper_unpeg",    1),
+        ("lower_unpeg",    1),
+        ("secret",         1),
+        ("block_sound",    1),
+        ("invisible",      1),
+        ("automap",        1)
+    ]
+    
+    _fields_ = [
+        ("vx_a",   ctypes.c_uint16),
+        ("vx_b",   ctypes.c_uint16),
+        ("flags",  WADFlags(_flags_)),
+        ("action", ctypes.c_uint16),
+        ("tag",    ctypes.c_uint16),
+        ("front",  ctypes.c_uint16),
+        ("back",   ctypes.c_uint16)
+    ]
+    _anonymous_ = ("flags",)
+    
+    def __init__(self, *args, **kwargs):
+        self.front = self.back = Linedef.NONE
+        super().__init__(*args, **kwargs)
 
 # TODO: an enum or something for triggers
-ZLinedef = make_struct(
-  "ZLinedef", """Represents a map linedef (Hexen / ZDoom)""",
-  [["vx_a",   'H',  0],
-   ["vx_b",   'H',  0],
-   ["flags",  'H',  0],
-   ["action", 'B',  0],
-   ["arg0",   'B',  0],
-   ["arg1",   'B',  0],
-   ["arg2",   'B',  0],
-   ["arg3",   'B',  0],
-   ["arg4",   'B',  0],
-   ["front",  'H', -1],
-   ["back",   'H', -1]],
-  ["impassable", "block_monsters", "two_sided",
-   "upper_unpeg", "lower_unpeg", "secret",
-   "block_sound", "invisible", "automap",
-   "repeat", ("trigger", 3),
-   "activate_any", None, "block_all"]
-)
+class ZLinedef(WADStruct):
+    """
+    Represents a map linedef (Hexen / ZDoom)
+        
+    Linedef.NONE is the placeholder value for unused sidedefs.
+    Using the value -1 is no longer supported.
+    """
+    _flags_ = [
+        ("impassable",     1),
+        ("block_monsters", 1),
+        ("two_sided",      1),
+        ("upper_unpeg",    1),
+        ("lower_unpeg",    1),
+        ("secret",         1),
+        ("block_sound",    1),
+        ("invisible",      1),
+        ("automap",        1),
+        ("repeat",         1),
+        ("trigger",        3),
+        ("activate_any",   1),
+        ("dummy",          1),
+        ("block_all",      1)
+    ]
+    
+    _fields_ = [
+        ("vx_a",   ctypes.c_uint16),
+        ("vx_b",   ctypes.c_uint16),
+        ("flags",  WADFlags(_flags_)),
+        ("action", ctypes.c_ubyte),
+        ("arg0",   ctypes.c_ubyte),
+        ("arg1",   ctypes.c_ubyte),
+        ("arg2",   ctypes.c_ubyte),
+        ("arg3",   ctypes.c_ubyte),
+        ("arg4",   ctypes.c_ubyte),
+        ("front",  ctypes.c_uint16),
+        ("back",   ctypes.c_uint16)
+    ]
+    _anonymous_ = ("flags",)
+    
+    def __init__(self, *args, **kwargs):
+        self.front = self.back = Linedef.NONE
+        super().__init__(*args, **kwargs)
 
-Thing = make_struct(
-  "Thing", """Represents a map thing""",
-  [["x",     'h', 0],
-   ["y",     'h', 0],
-   ["angle", 'H', 0],
-   ["type",  'H', 0],
-   ["flags", 'H', 0]],
-  ["easy", "medium", "hard", "deaf", "multiplayer"]
-)
+class Thing(WADStruct):
+    """Represents a map thing"""
+    _flags_ = [
+        ("easy",        1),
+        ("medium",      1),
+        ("hard",        1),
+        ("deaf",        1),
+        ("multiplayer", 1)
+    ]
+    
+    _fields_ = [
+        ("x",     ctypes.c_int16),
+        ("y",     ctypes.c_int16),
+        ("angle", ctypes.c_uint16),
+        ("type",  ctypes.c_uint16),
+        ("flags", WADFlags(_flags_))
+    ]
+    _anonymous_ = ("flags",)
 
-ZThing = make_struct(
-  "ZThing", """Represents a map thing (Hexen / ZDoom)""",
-  [["tid",    'H', 0],
-   ["x",      'h', 0],
-   ["y",      'h', 0],
-   ["height", 'h', 0],
-   ["angle",  'H', 0],
-   ["type",   'H', 0],
-   ["flags",  'H', 0],
-   ["action", 'B', 0],
-   ["arg0",   'B', 0],
-   ["arg1",   'B', 0],
-   ["arg2",   'B', 0],
-   ["arg3",   'B', 0],
-   ["arg4",   'B', 0]],
-  ["easy", "medium", "hard", "deaf", "dormant",
-   "fighter", "cleric", "mage", "solo", "multiplayer", "deathmatch"]
-)
+class ZThing(WADStruct):
+    """Represents a map thing (Hexen / ZDoom)"""
+    _flags_ = [
+        ("easy",        1),
+        ("medium",      1),
+        ("hard",        1),
+        ("deaf",        1),
+        ("dormant",     1),
+        ("fighter",     1),
+        ("cleric",      1),
+        ("mage",        1),
+        ("solo",        1),
+        ("multiplayer", 1),
+        ("deathmatch",  1)
+    ]
+    
+    _fields_ = [
+        ("tid",     ctypes.c_uint16),
+        ("x",       ctypes.c_int16),
+        ("y",       ctypes.c_int16),
+        ("height",  ctypes.c_int16),
+        ("angle",   ctypes.c_uint16),
+        ("type",    ctypes.c_uint16),
+        ("flags",   WADFlags(_flags_)),
+        ("action",  ctypes.c_ubyte),
+        ("arg0",    ctypes.c_ubyte),
+        ("arg1",    ctypes.c_ubyte),
+        ("arg2",    ctypes.c_ubyte),
+        ("arg3",    ctypes.c_ubyte),
+        ("arg4",    ctypes.c_ubyte)
+    ]
+    _anonymous_ = ("flags",)
 
-Sector = make_struct(
-  "Sector", """Represents a map sector""",
-  [["z_floor",  'h',  0],
-   ["z_ceil",   'h',  128],
-   ["tx_floor", '8s', "FLOOR4_8"],
-   ["tx_ceil",  '8s', "CEIL3_5"],
-   ["light",    'H',  160],
-   ["type",     'H',  0],
-   ["tag",      'H',  0]]
-)
+class Sector(WADStruct):
+    """Represents a map sector"""
+    _fields_ = [
+        ("z_floor",  ctypes.c_int16),
+        ("z_ceil",   ctypes.c_int16),
+        ("tx_floor", ctypes.c_char * 8),
+        ("tx_ceil",  ctypes.c_char * 8),
+        ("light",    ctypes.c_uint16),
+        ("type",     ctypes.c_uint16),
+        ("tag",      ctypes.c_uint16)
+    ]
+    
+    def __init__(self, *args, **kwargs):
+        self.z_ceil = 128
+        self.light = 160
+        self.tx_floor = "FLOOR4_8"
+        self.tx_ceil = "CEIL3_5"
+        super().__init__(*args, **kwargs)
 
-Node = make_struct(
-  "Node", """Represents a BSP tree node""",
-  [["x_start",           'h', 0],
-   ["y_start",           'h', 0],
-   ["x_vector",          'h', 0],
-   ["y_vector",          'h', 0],
-   ["right_bbox_top",    'h', 0],
-   ["right_bbox_bottom", 'h', 0],
-   ["right_bbox_left",   'h', 0],
-   ["right_bbox_right",  'h', 0],
-   ["left_bbox_top",     'h', 0],
-   ["left_bbox_bottom",  'h', 0],
-   ["left_bbox_left",    'h', 0],
-   ["left_bbox_right",   'h', 0],
-   ["right_index",       'H', 0],
-   ["left_index",        'H', 0]]
-)
+class Node(WADStruct):
+    """Represents a BSP tree node"""
+    _fields_ = [
+        ("x_start",           ctypes.c_int16),
+        ("y_start",           ctypes.c_int16),
+        ("x_vector",          ctypes.c_int16),
+        ("y_vector",          ctypes.c_int16),
+        ("right_bbox_top",    ctypes.c_int16),
+        ("right_bbox_bottom", ctypes.c_int16),
+        ("right_bbox_left",   ctypes.c_int16),
+        ("right_bbox_right",  ctypes.c_int16),
+        ("left_bbox_top",     ctypes.c_int16),
+        ("left_bbox_bottom",  ctypes.c_int16),
+        ("left_bbox_left",    ctypes.c_int16),
+        ("left_bbox_right",   ctypes.c_int16),
+        ("right_index",       ctypes.c_uint16),
+        ("left_index",        ctypes.c_uint16)
+    ]
 
-Seg = make_struct(
-  "Seg", """Represents a map seg""",
-  [["vx_a",   'H', 0],
-   ["vx_b",   'H', 0],
-   ["angle",  'H', 0],
-   ["line",   'H', 0],
-   ["side",   'H', 0],
-   ["offset", 'H', 0]]
-)
+class Seg(WADStruct):
+    """Represents a map seg"""
+    _fields_ = [
+        ("vx_a",   ctypes.c_uint16),
+        ("vx_b",   ctypes.c_uint16),
+        ("angle",  ctypes.c_uint16),
+        ("line",   ctypes.c_uint16),
+        ("side",   ctypes.c_uint16),
+        ("offset", ctypes.c_uint16)
+    ]
 
-SubSector = make_struct(
-  "SubSector", """Represents a map subsector""",
-  [["numsegs", 'H', 0],
-   ["seg_a",   'H', 0]]
-)
+class GLSeg(WADStruct):
+    """Represents a map GL seg"""
+    _fields_ = [
+        ("vx_a",    ctypes.c_uint16),
+        ("vx_b",    ctypes.c_uint16),
+        ("line",    ctypes.c_uint16),
+        ("side",    ctypes.c_uint16),
+        ("partner", ctypes.c_uint16)
+    ]
 
-GLSeg = make_struct(
-  "GLSeg", """Represents a map GL seg""",
-  [["vx_a",    'H', 0],
-   ["vx_b",    'H', 0],
-   ["line",    'H', 0],
-   ["side",    'H', 0],
-   ["partner", 'H', 0]]
-)
+class SubSector(WADStruct):
+    """Represents a map subsector"""
+    _fields_ = [
+        ("numsegs", ctypes.c_uint16),
+        ("seg_a",   ctypes.c_uint16)
+    ]
 
 class MapEditor:
     """Doom map editor
@@ -195,7 +282,7 @@ class MapEditor:
             self.reject   = Lump("")
 
     def _unpack_lump(self, class_, data):
-        s = class_._fmtsize
+        s = ctypes.sizeof(class_)
         return [class_(bytes=data[i:i+s]) for i in range(0,len(data),s)]
 
     def from_lumps(self, lumpgroup):
@@ -233,11 +320,6 @@ class MapEditor:
         except KeyError as e:
             raise ValueError("map is missing %s lump" % e)
         
-        # use -1 for unused sidedefs instead of 0xFFFF
-        for line in self.linedefs:
-            if line.front == 0xFFFF: line.front = -1
-            if line.back  == 0xFFFF: line.back  = -1
-        
         from struct import error as StructError
         try:
             self.ssectors = self._unpack_lump(SubSector, m["SSECTORS"].data)
@@ -263,12 +345,6 @@ class MapEditor:
 
     def to_lumps(self):
         m = NameGroup()
-        
-        # change -1 to 0xFFFF so linedefs pack correctly
-        linedefs = self.linedefs[:]
-        for line in linedefs:
-            if line.front == -1: line.front = 0xFFFF
-            if line.back  == -1: line.back  = 0xFFFF
         
         m["_HEADER_"] = self.header
         m["VERTEXES"] = Lump(join([x.pack() for x in self.vertexes]))
@@ -394,7 +470,7 @@ class MapEditor:
                 
                 if (remove_linedefs):
                     for lc in self.linedefs:
-                        if (lc.back != -1):
+                        if (lc.back != Linedef.NONE):
                             if (self.sectors[self.sidedefs[lc.front].sector] == sector1 and 
                                 self.sectors[self.sidedefs[lc.back].sector] == sector1):
                                 self.linedefs.remove(lc)
@@ -415,8 +491,8 @@ class MapEditor:
             z = copy(line)
             z.vx_a += vlen
             z.vx_b += vlen
-            if z.front != -1: z.front += ilen
-            if z.back != -1: z.back += ilen
+            if z.front != Linedef.NONE: z.front += ilen
+            if z.back != Linedef.NONE: z.back += ilen
             self.linedefs.append(z)
         for side in other.sidedefs:
             z = copy(side)

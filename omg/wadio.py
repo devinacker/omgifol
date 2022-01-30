@@ -1,23 +1,25 @@
 import os, hashlib, time
 from omg.util import *
 
-Header = make_struct(
-  "Header",
-  """Class for WAD file headers""",
-  [["type",    '4s', "PWAD"],
-   ["dir_len", 'i',  0     ],
-   ["dir_ptr", 'i',  12    ]]
-)
-
-Entry = make_struct(
-  "Entry",
-  """Class for WAD entries""",
-  [["ptr",       'i',  0 ],
-   ["size",      'i',  0 ],
-   ["name",      '8s', ""],
-   ["been_read", 'x',  False]]   # Used by WAD loader
-)
-
+class Header(WADStruct):
+    """Class for WAD file headers"""
+    _fields_ = [
+        ("type",    ctypes.c_char * 4),
+        ("dir_len", ctypes.c_uint32),
+        ("dir_ptr", ctypes.c_uint32)
+    ]
+    
+class Entry(WADStruct):
+    """Class for WAD file entries"""
+    _fields_ = [
+        ("ptr",  ctypes.c_uint32),
+        ("size", ctypes.c_uint32),
+        ("name", ctypes.c_char * 8),
+    ]
+    
+    def __init__(self, *args, **kwargs):
+        self.been_read = False # Used by WAD loader
+        super().__init__(*args, **kwargs)
 
 # WadIO.open() behaves just like open(). Sometimes it is
 # useful to specifically either open an existing file
@@ -92,13 +94,13 @@ class WadIO:
                 self.basefile = open(filename, 'rb')
             
             filesize = os.stat(self.basefile.name)[6]
-            self.header = h = Header(bytes=self.basefile.read(Header._fmtsize))
+            self.header = h = Header(bytes=self.basefile.read(ctypes.sizeof(Header)))
             if (not h.type in ("PWAD", "IWAD")) or filesize < 12:
                 raise IOError("The file is not a valid WAD file.")
-            if filesize < h.dir_ptr + h.dir_len*Entry._fmtsize:
+            if filesize < h.dir_ptr + h.dir_len*ctypes.sizeof(Entry):
                 raise IOError("Invalid directory information in header.")
             self.basefile.seek(h.dir_ptr)
-            self.entries = [Entry(bytes=self.basefile.read(Entry._fmtsize)) \
+            self.entries = [Entry(bytes=self.basefile.read(ctypes.sizeof(Entry))) \
                 for i in range(h.dir_len)]
         # Create new
         else:
@@ -296,7 +298,7 @@ class WadIO:
         chunks.append((filesize, filesize + 1))
         # Add to the list the chunks that are occupied by lump data
         chunks.append((self.header.dir_ptr, self.header.dir_ptr + \
-            len(self.entries)*Entry._fmtsize))
+            len(self.entries)*ctypes.sizeof(Entry)))
         for entry in self.entries:
             if entry.size > 0:
                 chunks.append((entry.ptr, entry.ptr + entry.size))
@@ -335,4 +337,4 @@ class WadIO:
         s.append("    %s bytes total\n" % str(total))
         for w in wasted:
             s.append("    %i bytes starting at 0x%x\n" % (w[1]-w[0], w[0]))
-        return join(s)
+        return ''.join(s)

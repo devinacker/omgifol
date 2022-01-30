@@ -5,12 +5,10 @@
 
 from __future__  import print_function
 from fnmatch     import fnmatchcase as wccmp, filter as wcinlist
-from struct      import pack, unpack, calcsize
+from struct      import pack, unpack
 from copy        import copy, deepcopy
 from collections import OrderedDict as od
-
-_pack = pack
-_unpack = unpack
+import ctypes
 
 class OrderedDict(od):
     """
@@ -68,7 +66,7 @@ def join(seq):
     return bytes().join(seq)
 
 def readfile(source):
-    """Read data from a file, return data as a string. Target may
+    """Read data from a file, return data as bytes. Target may
     be a path name string or a file-like object (with a `read` method)."""
     if isinstance(source, str):
         return open(source, 'rb').read()
@@ -161,131 +159,63 @@ def pack32(n):
 
 #----------------------------------------------------------------------
 #
-# A tool that can generate "Struct" classes for packing, unpacking, and
-# representing the unpacked form of binary data.
-#
-# If this code looks ugly, be happy you didn't see the
-# original version...
-#
+# Struct generation stuff (TODO)
 
-# Template for struct class generation
-_struct_template = '''
-class Struct(object):
-    """%(doc)s"""
+def WADFlags(flags):
+    """
+    This is a helper function to generate flags which can be accessed either
+    individually or as an entire 16-bit field.
+    
+    The flags argument is a list of (name, size) tuples, where size is in bits.
+    See omg.mapedit for usage examples.
+    """
+    class FlagsUnion(ctypes.Union):
+        class Flags(ctypes.LittleEndianStructure):
+            _fields_ = [(name, ctypes.c_uint16, size) for (name, size) in flags]
+        
+        _fields_ = [("flags", ctypes.c_uint16), ("_flags", Flags)]
+        _anonymous_ = ("_flags",)
+    
+    return FlagsUnion
 
-    _fmtsize = %(fmtsize)i
-    _fmt  = %(fmt)r
+class WADStruct(ctypes.LittleEndianStructure):
+    """
+    Class for creating WAD-related data structures.
+    
+    This is a subclass of ctypes.LittleEndianStructure with some additional features:
+        - easy initialization from byte strings
+        - automatic conversion to/from "Doom-safe" ASCII strings
+    """
 
-    def __init__(self, %(initargs)s, bytes=None):
-        if bytes:
-            from omg.util import zstrip, safe_name
-            from struct import unpack
-            %(unpackexpr)s
+    _pack_ = 1
+
+    def __init__(self, *args, **kwargs):
+        """
+        This works the same as initializing a regular ctypes structure.
+        Additionally, if an argument named 'bytes' is provided, the struct instance
+        will be initialized from the provided byte string instead.
+        """
+        if "bytes" in kwargs:
+            buf = ctypes.create_string_buffer(kwargs["bytes"], ctypes.sizeof(self))
+            ctypes.memmove(ctypes.byref(self), ctypes.byref(buf), len(buf))
         else:
-            %(initbody)s
-        %(init_exec)s
-
-    def __getattribute__(self, name):
-        return object.__getattribute__(self, name)
+            super().__init__(*args, **kwargs)
 
     def pack(self):
-        from omg.util import zpad, safe_name
-        from struct import pack
-        return %(packexpr)s
-
-%(flagdefs)s
-
-Struct.__name__ = %(name)r
-'''
-
-# Template for struct flag property
-_flagproperty = '''
-    def get_%s(self):
-        return %s((self.%s >> %i) & %i)
-    def set_%s(self, value):
-        self.%s &= %i
-        if value is not None and (isinstance(value, bool) or 0 <= value <= %i):
-            self.%s |= (int(value) << %i)
-        elif value:
-            raise ValueError("%s must be between 0 and %i")
+        """Helper to maintain API backward compatibility. Returns bytes(self)."""
+        return bytes(self)
     
-    %s = property(get_%s, set_%s)'''
-
-def make_property(name, bit, size=1, type=bool, var="flags"):
-    """Helper function for make_struct which defines properties based on
-    bit fields. This is called automatically for "flags" when passing a 
-    list of flags to make_struct, but can also be added to init_exec to
-    handle flags in other variables if needed."""
+    def __getattribute__(self, name):
+        value = super().__getattribute__(name)
+        if type(value) == bytes:
+            return safe_name(zstrip(value))
+        return value
     
-    getmask = (1 << size) - 1
-    setmask = 0xFFFF ^ (getmask << bit)
-    
-    return _flagproperty % (name, type.__name__, var, bit, getmask,
-                            name, var, setmask, getmask, var, bit, name, getmask,
-                            name, name, name)
+    def __setattr__(self, name, value):
+        if type(value) == str:
+            value = safe_name(value).encode('ascii')
+        super().__setattr__(name, value)
 
-def _structdef(name, doc, fields, flags=None, init_exec=""):
-    """Helper function for make_struct. Needed because Python doesn't
-    like compile() and exec in the place when there are unknown
-    variables floating around... (?)"""
-
-    extra  = [f for f in fields if f[1] == 'x']
-    fields = [f for f in fields if f[1] != 'x']
-
-    fmt = "<" + "".join(f[1] for f in fields)
-    fmtsize = calcsize(fmt)
-
-    # properties for easy access to the 'flags' bit field
-    flagdefs = ""
-    if flags:
-        i = 0
-        for f in flags:
-            if f is None:
-                i += 1
-                pass
-            elif isinstance(f, str):
-                flagdefs += make_property(f, i)
-                i += 1
-            elif isinstance(f, tuple) and len(f) == 2:
-                propname, size = f
-                flagdefs += make_property(propname, i, size, int if size > 1 else bool)
-                i += size
-            else:
-                raise TypeError("flag must be a string (name), tuple (name, size), or None")
-    
-    if init_exec: init_exec += ";"
-    init_exec += '; '.join("self.%s=%s" % (f[0], f[0]) for f in extra)
-
-    # example:  x=0, y=0, foo="BAR"
-    initargs = ', '.join(f[0] + "=" + repr(f[2]) for f in fields+extra)
-
-    # example:  self.x, self.y, self.foo = unpack('hh8s', bytes);
-    #           self.foo = safe_name(zstrip(self.foo))
-    unpackexpr =  ', '.join('self.'+f[0] for f in fields)
-    unpackexpr += (" = unpack(%r, bytes); " % fmt)
-    unpackexpr += "; ".join("self.%s=safe_name(zstrip(self.%s))" % \
-        (f[0], f[0]) for f in fields if 's' in f[1])
-
-    # example:  self.x=x; self.y=y; self.foo=foo
-    initbody = "; ".join("self.%s=%s" % (f[0], f[0]) for f in fields)
-
-    # example:  pack()
-    packs = []
-    for f in fields:
-        if 's' in f[1]:
-            packs.append("zpad(safe_name(self.%s))" % f[0])
-        else:
-            packs.append("self.%s" % f[0])
-    packexpr = ("pack(%r, " % fmt) + ', '.join(packs) + ")"
-
-    s = _struct_template % locals()
-
-    # print(s.replace("Struct", name))
-    return compile(s, "<struct>", "exec")
-
-def make_struct(*args, **kwargs):
-    """Create a Struct class according to the given format"""
-    namespace = {}
-    
-    exec(_structdef(*args, **kwargs), namespace)
-    return namespace['Struct']
+    def __hash__(self):
+        # needed because this is by default unhashable otherwise
+        return hash(bytes(self))
