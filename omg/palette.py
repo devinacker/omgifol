@@ -77,7 +77,7 @@ class Palette:
 
     def make_grays(self):
         """Create 'grays' table containing the indices of all grays
-        in the current set of colors"""
+        in the current set of colors."""
         self.grays = [i for i, rgb in enumerate(self.colors) \
             if (rgb[0]==rgb[1]==rgb[2])]
 

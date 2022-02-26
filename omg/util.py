@@ -115,10 +115,8 @@ def zpad(chars):
     return pack('8s', chars.encode('ascii'))
     
 def zstrip(chars):
-    """
-    Return a string representing chars with all trailing null bytes removed.
-    chars can be a string or byte string.
-    """
+    """Return a string representing chars with all trailing null bytes removed.
+    chars can be a string or byte string."""
     if isinstance(chars, bytes):
         chars = str(chars.decode('ascii', 'ignore'))
     
@@ -133,27 +131,27 @@ def fixname(chars):
     return zstrip(chars).translate(_trans_table)
 
 def fix_saving_name(name):
-    """Neutralizes backslashes in Arch-Vile frame names"""
+    """Neutralizes backslashes in Arch-Vile frame names."""
     return name.rstrip('\0').replace('\\', '`')
 
 def fix_loading_name(name):
-    """Restores backslash to Arch-Vile frame names"""
+    """Restores backslash to Arch-Vile frame names."""
     return fixname(name).replace('`', '\\')
 
 def unpack16(s):
-    """Convert a packed signed short (2 bytes) to a Python int"""
+    """Convert a packed signed short (2 bytes) to a Python int."""
     return unpack('<h', s)[0]
 
 def pack16(n):
-    """Convert a Python int to a packed signed short (2 bytes)"""
+    """Convert a Python int to a packed signed short (2 bytes)."""
     return pack('<h', n)
 
 def unpack32(s):
-    """Convert a packed signed long (4 bytes) to a Python int"""
+    """Convert a packed signed long (4 bytes) to a Python int."""
     return unpack('<i', s)[0]
 
 def pack32(n):
-    """Convert a Python int to a packed signed long (4 bytes)"""
+    """Convert a Python int to a packed signed long (4 bytes)."""
     return pack('<i', n)
 
 
@@ -190,11 +188,9 @@ class WADStruct(ctypes.LittleEndianStructure):
     _pack_ = 1
 
     def __init__(self, *args, **kwargs):
-        """
-        This works the same as initializing a regular ctypes structure.
+        """This works the same as initializing a regular ctypes structure.
         Additionally, if an argument named 'bytes' is provided, the struct instance
-        will be initialized from the provided byte string instead.
-        """
+        will be initialized from the provided byte string instead."""
         if "bytes" in kwargs:
             buf = ctypes.create_string_buffer(kwargs["bytes"], ctypes.sizeof(self))
             ctypes.memmove(ctypes.byref(self), ctypes.byref(buf), len(buf))

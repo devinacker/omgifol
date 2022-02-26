@@ -6,21 +6,21 @@ import omg.lineinfo as lineinfo
 import omg.thinginfo as thinginfo
 
 class Vertex(WADStruct):
-    """Represents a map vertex"""
+    """Represents a map vertex."""
     _fields_ = [
         ("x", ctypes.c_int16),
         ("y", ctypes.c_int16)
     ]
 
 class GLVertex(WADStruct):
-    """Represents a map GL vertex"""
+    """Represents a map GL vertex."""
     _fields_ = [
         ("x", ctypes.c_int32),
         ("y", ctypes.c_int32)
     ]
 
 class Sidedef(WADStruct):
-    """Represents a map sidedef"""
+    """Represents a map sidedef."""
     _fields_ = [
         ("off_x",  ctypes.c_int16),
         ("off_y",  ctypes.c_int16),
@@ -36,8 +36,8 @@ class Sidedef(WADStruct):
 
 class Linedef(WADStruct):
     """
-    Represents a map linedef
-    
+    Represents a map linedef.
+
     Linedef.NONE is the placeholder value for unused sidedefs.
     Using the value -1 is no longer supported.
     """
@@ -73,8 +73,8 @@ class Linedef(WADStruct):
 # TODO: an enum or something for triggers
 class ZLinedef(WADStruct):
     """
-    Represents a map linedef (Hexen / ZDoom)
-        
+    Represents a map linedef (Hexen / ZDoom).
+
     Linedef.NONE is the placeholder value for unused sidedefs.
     Using the value -1 is no longer supported.
     """
@@ -109,13 +109,13 @@ class ZLinedef(WADStruct):
         ("back",   ctypes.c_uint16)
     ]
     _anonymous_ = ("flags",)
-    
+
     def __init__(self, *args, **kwargs):
         self.front = self.back = Linedef.NONE
         super().__init__(*args, **kwargs)
 
 class Thing(WADStruct):
-    """Represents a map thing"""
+    """Represents a map thing."""
     _flags_ = [
         ("easy",        1),
         ("medium",      1),
@@ -134,7 +134,7 @@ class Thing(WADStruct):
     _anonymous_ = ("flags",)
 
 class ZThing(WADStruct):
-    """Represents a map thing (Hexen / ZDoom)"""
+    """Represents a map thing (Hexen / ZDoom)."""
     _flags_ = [
         ("easy",        1),
         ("medium",      1),
@@ -167,7 +167,7 @@ class ZThing(WADStruct):
     _anonymous_ = ("flags",)
 
 class Sector(WADStruct):
-    """Represents a map sector"""
+    """Represents a map sector."""
     _fields_ = [
         ("z_floor",  ctypes.c_int16),
         ("z_ceil",   ctypes.c_int16),
@@ -186,7 +186,7 @@ class Sector(WADStruct):
         super().__init__(*args, **kwargs)
 
 class Node(WADStruct):
-    """Represents a BSP tree node"""
+    """Represents a BSP tree node."""
     _fields_ = [
         ("x_start",           ctypes.c_int16),
         ("y_start",           ctypes.c_int16),
@@ -205,7 +205,7 @@ class Node(WADStruct):
     ]
 
 class Seg(WADStruct):
-    """Represents a map seg"""
+    """Represents a map seg."""
     _fields_ = [
         ("vx_a",   ctypes.c_uint16),
         ("vx_b",   ctypes.c_uint16),
@@ -216,7 +216,7 @@ class Seg(WADStruct):
     ]
 
 class GLSeg(WADStruct):
-    """Represents a map GL seg"""
+    """Represents a map GL seg."""
     _fields_ = [
         ("vx_a",    ctypes.c_uint16),
         ("vx_b",    ctypes.c_uint16),
@@ -226,14 +226,14 @@ class GLSeg(WADStruct):
     ]
 
 class SubSector(WADStruct):
-    """Represents a map subsector"""
+    """Represents a map subsector."""
     _fields_ = [
         ("numsegs", ctypes.c_uint16),
         ("seg_a",   ctypes.c_uint16)
     ]
 
 class MapEditor:
-    """Doom map editor
+    """Doom map editor.
 
     Data members:
         header        Lump object consisting of data in map header (if any)
@@ -262,7 +262,7 @@ class MapEditor:
         """
 
     def __init__(self, from_lumps=None):
-        """Create new, optionally from a lump group"""
+        """Create new, optionally from a lump group."""
         if from_lumps is not None:
             self.from_lumps(from_lumps)
         else:
@@ -337,7 +337,7 @@ class MapEditor:
             self.reject   = Lump()
 
     def load_gl(self, mapobj):
-        """Load GL nodes entries from a map"""
+        """Load GL nodes entries from a map."""
         vxdata = mapobj["GL_VERT"].data[4:]  # s[:4] == "gNd3" ?
         self.gl_vert  = self._unpack_lump(GLVertex,  vxdata)
         self.gl_segs  = self._unpack_lump(GLSeg,     mapobj["GL_SEGS"].data)
@@ -423,8 +423,8 @@ class MapEditor:
         Returns 1 when the vertex positions are the same.
         Returns 2 when the vertex positions are in the same order.
         Returns 3 when the linedefs use the same vertices, but flipped.
-        Returns 4 when the linedefs use the exact same vertices."""
-        
+        Returns 4 when the linedefs use the exact same vertices.
+        """
         if (linedef1.vx_a == linedef2.vx_a):
             if (linedef1.vx_b == linedef2.vx_b):
                 return 4
@@ -448,8 +448,7 @@ class MapEditor:
         return 0
         
     def compare_sectors(self,sect1,sect2):
-        """Compare two sectors' data and returns True when they match.
-        """
+        """Compare two sectors' data and returns True when they match."""
         if (sect1.z_floor == sect2.z_floor and
             sect1.z_ceil == sect2.z_ceil and
             sect1.tx_floor == sect2.tx_floor and

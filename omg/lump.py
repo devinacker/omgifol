@@ -114,9 +114,8 @@ class Sound(Lump):
         
     def set_format(self, format):
         """Change the format of the sound.
-        
-        Warning: Changing a sound's format will erase any existing sound data!
-        """
+
+        Warning: Changing a sound's format will erase any existing sound data!"""
         try:
             if format == self.format:
                 return # don't do anything if format is the same as before
@@ -280,10 +279,10 @@ class Sound(Lump):
                 self.sample_rate = sample_rate
         else:
             raise ValueError("Unknown or invalid sound format")
-    
+
     def to_raw(self):
-        """Returns the raw values making up the sound as a byte string. 
-        
+        """Returns the raw values making up the sound as a byte string.
+
         The resulting values depend on the value of 'format'.
         For format 2, the value is returned an int.
         Otherwise the data is returned as a byte string.
@@ -328,8 +327,8 @@ class Sound(Lump):
         not supported, the format's default will be used.
 
         Special cases: ".lmp" saves the raw lump data, and ".raw" saves
-        the raw sound data."""
-
+        the raw sound data.
+        """
         format = os.path.splitext(filename)[1][1:].upper() or 'WAV'
         if   format == 'LMP': writefile(filename, self.data)
         elif format == 'RAW': writefile(filename, self.to_raw())
@@ -452,7 +451,7 @@ class Graphic(Lump):
 
     def from_raw(self, data, width, height, x_offset=0, y_offset=0, pal=None):
         """Load a raw 8-bpp image, converting to the Doom picture format
-        (used by all graphics except flats)"""
+        (used by all graphics except flats)."""
         pal = pal or omg.palette.default
         pixels = [i if i != pal.tran_index else None for i in data]
         self.from_pixels(pixels, width, height, x_offset, y_offset)
@@ -491,13 +490,14 @@ class Graphic(Lump):
 
         `tran_index` specifies the palette index to use for
         transparent pixels. The value defaults to that of the
-        Graphic object's palette instance."""
+        Graphic object's palette instance.
+        """
         tran_index = tran_index or self.palette.tran_index
         output = [i if i is not None else tran_index for i in self.to_pixels()]
         return bytes(bytearray(output))
 
     def to_Image(self, mode='P'):
-        """Convert to a PIL Image instance"""
+        """Convert to a PIL Image instance."""
         if mode != 'RGBA' or isinstance(self, Flat):
             # target image has no alpha, 
             # or source image is a flat (which has no transparent pixels)
@@ -517,15 +517,15 @@ class Graphic(Lump):
             return im
 
     def from_Image(self, im, translate=False):
-        """Load from a PIL Image instance
+        """Load from a PIL Image instance.
 
         If the input image is 24-bit or 32-bit, the colors will be
         looked up in the current palette.
 
         If the input image is 8-bit, indices will simply be copied
         from the input image. To properly translate colors between
-        palettes, set the `translate` parameter."""
-
+        palettes, set the `translate` parameter.
+        """
         pixels = im.tobytes()
         width, height = im.size
         xoff, yoff = (width // 2)-1, height-5
@@ -596,8 +596,8 @@ class Graphic(Lump):
 
         `mode` may be be 'P', 'RGB', or 'RGBA' for palette or 24/32 bit
         output, respectively. However, .raw ignores this parameter and
-        always writes in palette mode."""
-
+        always writes in palette mode.
+        """
         format = os.path.splitext(filename)[1][1:].upper()
         if   format == 'LMP': writefile(filename, self.data)
         elif format == 'RAW': writefile(filename, self.to_raw())
@@ -622,7 +622,7 @@ class Graphic(Lump):
 
 
 class Flat(Graphic):
-    """Subclass of Graphic, for flat graphics"""
+    """Subclass of Graphic, for flat graphics."""
 
     def get_dimensions(self):
         sz = len(self.data)

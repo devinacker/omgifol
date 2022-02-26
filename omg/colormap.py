@@ -59,5 +59,5 @@ class Colormap:
         
     def set_position(self,table,index,pal_index):
         """Sets a specified position in the colormap to the specified
-        index in the playpal"""
+        index in the playpal."""
         self.tables[table][index] = pal_index

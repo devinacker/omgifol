@@ -2,7 +2,7 @@ import os, hashlib, time
 from omg.util import *
 
 class Header(WADStruct):
-    """Class for WAD file headers"""
+    """Class for WAD file headers."""
     _fields_ = [
         ("type",    ctypes.c_char * 4),
         ("dir_len", ctypes.c_uint32),
@@ -10,7 +10,7 @@ class Header(WADStruct):
     ]
     
 class Entry(WADStruct):
-    """Class for WAD file entries"""
+    """Class for WAD file entries."""
     _fields_ = [
         ("ptr",  ctypes.c_uint32),
         ("size", ctypes.c_uint32),
@@ -26,13 +26,13 @@ class Entry(WADStruct):
 # or create a new one.
 
 def open_wad():
-    """Open an existing WAD, raise IOError if not found"""
+    """Open an existing WAD, raise IOError if not found."""
     if not os.path.exists(location):
         raise IOError
     return WadIO(location)
 
 def create_wad(location):
-    """Create a new WAD, raise IOError if exists"""
+    """Create a new WAD, raise IOError if exists."""
     if os.path.exists(location):
         raise IOError
     return WadIO(location)
@@ -48,7 +48,7 @@ class WadIO:
     saving by reading the value of the boolean attribute .issafe
 
     WadIO objects work on the WAD directory level. There is
-    very little magic available- you can't do things like automatic
+    very little magic available - you can't do things like automatic
     merging or managing sections, and Omgifol is never aware of
     what types lumps are. In other words, you're doing things more
     or less manually, with the hard binary content of lumps and
@@ -109,7 +109,7 @@ class WadIO:
             self.basefile.flush()
 
     def close(self):
-        """Close the base file"""
+        """Close the base file."""
         assert self.basefile
         # Unfortunately, a save can't be forced here.
         if not self.issafe:
@@ -179,7 +179,7 @@ class WadIO:
         self.basefile.write(data)
 
     def write_append(self, data):
-        """Write data at the end of the file"""
+        """Write data at the end of the file."""
         self.basefile.seek(0, 2)
         self.basefile.write(data)
 

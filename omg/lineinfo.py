@@ -444,7 +444,7 @@ trigcompat = \
   2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 
 def check_compat(num):
-    """Check the compatibility for a trigger number"""
+    """Check the compatibility for a trigger number."""
     if 8192 <= num < 32768:
         return "BOOM GENERALIZED"
     try:

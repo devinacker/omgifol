@@ -3,7 +3,7 @@ from omg.util import *
 from omg.wad  import TxdefGroup
 
 class TextureDef(WADStruct):
-    """Class for texture definitions"""
+    """Class for texture definitions."""
     _fields_ = [
         ("name",     ctypes.c_char * 8),
         ("dummy1",   ctypes.c_uint32),
@@ -19,7 +19,7 @@ class TextureDef(WADStruct):
         super().__init__(*args, **kwargs)
 
 class PatchDef(WADStruct):
-    """Class for patches"""
+    """Class for patches."""
     _fields_ = [
         ("x",      ctypes.c_int16),
         ("y",      ctypes.c_int16),
@@ -79,7 +79,7 @@ class Textures(OrderedDict):
             self[texture.name] = texture
 
     def to_lumps(self):
-        """Returns two lumps TEXTURE1, PNAMES"""
+        """Returns two lumps TEXTURE1, PNAMES."""
         textures = self.items()
         textures.sort()
 
