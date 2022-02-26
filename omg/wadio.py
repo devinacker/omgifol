@@ -333,7 +333,7 @@ class WadIO:
         # Add info about wasted space in the WAD, to find out how much of an
         # improvement a rewrite() would make
         total, wasted = self.calc_waste()
-        s.append("\n\nWasted space:\n\n")
+        s.append("\nWasted space:\n\n")
         s.append("    %s bytes total\n" % str(total))
         for w in wasted:
             s.append("    %i bytes starting at 0x%x\n" % (w[1]-w[0], w[0]))
