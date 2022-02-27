@@ -29,10 +29,9 @@ class Palette:
     """
 
     def __init__(self, colors=None, tran_index=None, tran_color=None):
-
         """Creates a new Palette object. The 'colors' argument may be
         either a list of (r,g,b) tuples or an RGBRGBRGB... string/bytes.
-        'tran_index' specifies the index in the palette where the 
+        'tran_index' specifies the index in the palette where the
         transparent color should be placed. Note that this is only used
         when saving images, and thus doesn't affect color lookups.
         'tran_color' is the color to use for transparency."""
@@ -77,7 +76,7 @@ class Palette:
 
     def make_grays(self):
         """Create 'grays' table containing the indices of all grays
-        in the current set of colors"""
+        in the current set of colors."""
         self.grays = [i for i, rgb in enumerate(self.colors) \
             if (rgb[0]==rgb[1]==rgb[2])]
 

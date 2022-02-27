@@ -5,7 +5,7 @@ from omg.util import *
 from omg.wadio import WadIO
 
 class LumpGroup(OrderedDict):
-    """A dict-like object for holding a group of lumps"""
+    """A dict-like object for holding a group of lumps."""
 
     def __init__(self, name='data', lumptype=Lump, config=()):
         OrderedDict.__init__(self)
@@ -26,7 +26,7 @@ class LumpGroup(OrderedDict):
 
     def to_file(self, filename, use_free=True):
         """Save group as a separate WAD file.
-        
+
         If use_free is true, existing free space in the WAD will
         be used, if possible."""
         w = WadIO(filename)
@@ -40,7 +40,7 @@ class LumpGroup(OrderedDict):
 
     def save_wadio(self, wadio, use_free=True):
         """Save to a WadIO object.
-        
+
         If use_free is true, existing free space in the WAD will
         be used, if possible."""
         for m in self:
@@ -54,14 +54,14 @@ class LumpGroup(OrderedDict):
         return a
 
     def __add__(self, other):
-        """Adds two dicts, copying items shallowly"""
+        """Adds two dicts, copying items shallowly."""
         c = self.__class__(self._name, self.lumptype, self.config)
         c.update(self)
         c.update(other)
         return c
 
 class MarkerGroup(LumpGroup):
-    """Group for lumps found between markers, e.g. sprites"""
+    """Group for lumps found between markers, e.g. sprites."""
 
     def __init2__(self):
         self.prefix = self.config + "*_START"
@@ -96,7 +96,7 @@ class MarkerGroup(LumpGroup):
 
     def save_wadio(self, wadio, use_free=True):
         """Save to a WadIO object.
-        
+
         If use_free is true, existing free space in the WAD will
         be used, if possible."""
         if len(self) == 0:
@@ -107,7 +107,7 @@ class MarkerGroup(LumpGroup):
 
 
 class HeaderGroup(LumpGroup):
-    """Group for lumps arranged header-tail (e.g. maps)"""
+    """Group for lumps arranged header-tail (e.g. maps)."""
 
     def __init2__(self):
         self.tail = self.config
@@ -143,7 +143,7 @@ class HeaderGroup(LumpGroup):
 
     def save_wadio(self, wadio, use_free=True):
         """Save to a WadIO object.
-        
+
         If use_free is true, existing free space in the WAD will
         be used, if possible."""
         for h in self:
@@ -161,7 +161,7 @@ class HeaderGroup(LumpGroup):
 
 
 class NameGroup(LumpGroup):
-    """Group for lumps recognized by special names"""
+    """Group for lumps recognized by special names."""
 
     def __init2__(self):
         self.names = self.config
@@ -179,7 +179,7 @@ class NameGroup(LumpGroup):
                 wadio.entries[i].been_read = True
 
 class TxdefGroup(NameGroup):
-    """Group for texture definition lumps"""
+    """Group for texture definition lumps."""
     def __init2__(self):
         self.names = ['TEXTURE?', 'PNAMES']
     def __add__(self, other):
@@ -246,7 +246,8 @@ class WAD:
         .structure     Structure definition.
         .palette       Palette
         .sprites, etc  Sections containing lumps, as specified by
-                       the structure definition"""
+                       the structure definition
+    """
 
     def __init__(self, from_file=None, structure=defstruct):
         """Create a new WAD. The optional `source` argument may be a

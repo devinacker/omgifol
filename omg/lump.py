@@ -65,7 +65,7 @@ class Music(Lump):
 
 class Sound(Lump):
     """Subclass of Lump, for Doom format sounds. Supports
-    conversion from/to RAWs (sequences of bytes), as well as 
+    conversion from/to RAWs (sequences of bytes), as well as
     saving to/loading from various file formats (via PySoundFile).
 
     Useful attributes:
@@ -74,9 +74,9 @@ class Sound(Lump):
         .sample_rate    --
         .midi_bank      -- MIDI patch bank (format 1/2 only)
         .midi_patch     -- MIDI patch number (format 1/2 only)
-    
+
     Possible values for the 'format' attribute:
-    
+
     0: PC speaker sound
        Raw data consists of values 0-127 corresponding to pitch.
        Sample rate is fixed at 140Hz.
@@ -89,10 +89,10 @@ class Sound(Lump):
     3: Digitized sound (default)
        Raw data is 8-bit unsigned PCM.
        Sample rate defaults to 11025 Hz, but can be changed.
-       
+
     Only format 3 can be exported to an audio file.
     """
-    
+
     def __init__(self, data=None, from_file=None):
         Lump.__init__(self, data, from_file)
         # default to an empty digitized sound effect if no data loaded
@@ -101,7 +101,7 @@ class Sound(Lump):
                 self.format = 3
         except TypeError:
             pass
-        
+
     def get_format(self):
         """Retrieve the format of the sound."""
         if len(self.data) < 2:
@@ -111,18 +111,17 @@ class Sound(Lump):
         if format > 3:
             raise TypeError("Unknown or invalid sound format")
         return format
-        
+
     def set_format(self, format):
         """Change the format of the sound.
-        
-        Warning: Changing a sound's format will erase any existing sound data!
-        """
+
+        Warning: Changing a sound's format will erase any existing sound data!"""
         try:
             if format == self.format:
                 return # don't do anything if format is the same as before
         except TypeError:
             pass
-        
+
         if format == 0:
             # PC speaker sound
             self.data = pack('<HH', format, 0)
@@ -137,9 +136,9 @@ class Sound(Lump):
             self.data = pack("<HHI32x", format, 11025, 32)
         else:
             raise ValueError("Unknown or invalid sound format")
-        
+
     format = property(get_format, set_format)
-    
+
     def get_length(self):
         """Retrieve the length of the sound."""
         format = self.format
@@ -152,11 +151,11 @@ class Sound(Lump):
         elif format == 3:
             # digitized sound
             return unpack('<I', self.data[4:8])[0] - 32
-    
+
     def set_length(self, length):
         """Set the length of the sound. This will make the lump larger or smaller."""
         format = self.format
-        
+
         if length < 0 or length > 65535:
             raise ValueError("sound effect length must be between 0-65535")
 
@@ -166,9 +165,9 @@ class Sound(Lump):
         else:
             # grow or shrink existing raw data to new size
             self.from_raw(self.to_raw()[0:length] + b'\0'*(length - self.length))
-    
+
     length = property(get_length, set_length)
-    
+
     def get_sample_rate(self):
         """Retrieve the sample rate of the sound. Only useful for digitized sounds."""
         format = self.format
@@ -181,7 +180,7 @@ class Sound(Lump):
         elif format == 3:
             # digitized sound
             return unpack('<H', self.data[2:4])[0]
-    
+
     def set_sample_rate(self, sample_rate):
         """Set the sample rate of the sound. Only supported for digitized sounds."""
         format = self.format
@@ -190,7 +189,7 @@ class Sound(Lump):
             self.data = self.data[:2] + pack('<H', sample_rate) + self.data[4:]
         else:
             raise TypeError("set_sample_rate only supported for digitized sounds (format 3)")
-            
+
     sample_rate = property(get_sample_rate, set_sample_rate)
 
     def get_midi_bank(self):
@@ -202,7 +201,7 @@ class Sound(Lump):
         elif format == 2:
             # single MIDI note
             return unpack('<H', self.data[2:4])[0]
-            
+
     def set_midi_bank(self, bank):
         """Set the MIDI bank of the sound. Only supported for MIDI sounds."""
         format = self.format
@@ -214,7 +213,7 @@ class Sound(Lump):
             self.data = self.data[:2] + pack('<H', bank) + self.data[4:]
         else:
             raise TypeError("only supported for MIDI sounds (format 1 or 2)")
-    
+
     midi_bank = property(get_midi_bank, set_midi_bank)
 
     def get_midi_patch(self):
@@ -226,7 +225,7 @@ class Sound(Lump):
         elif format == 2:
             # single MIDI note
             return unpack('<H', self.data[4:6])[0]
-            
+
     def set_midi_patch(self, patch):
         """Set the MIDI patch of the sound. Only supported for MIDI sounds."""
         format = self.format
@@ -238,20 +237,19 @@ class Sound(Lump):
             self.data = self.data[:4] + pack('<H', patch) + self.data[6:]
         else:
             raise TypeError("only supported for MIDI sounds (format 1 or 2)")
-    
+
     midi_patch = property(get_midi_patch, set_midi_patch)
-    
+
     def from_raw(self, data, format=None, sample_rate=None):
         """Replaces the raw values making up the sound.
-        
+
         If 'format' or 'sample_rate' are not specified, the existing values
         will be used.
-        
+
         The expected values depend on the value of 'format'.
         For format 2, 'data' is expected to be an int.
         Otherwise it is expected to be a byte string.
         """
-        
         if isinstance(data, bytes):
             length = len(data)
             if length < 0 or length > 65535:
@@ -262,7 +260,7 @@ class Sound(Lump):
             format = self.format
         else:
             self.format = format
-        
+
         if format == 0:
             # PC speaker sound
             self.data = self.data[:2] + pack('<H', len(data)) + data
@@ -280,10 +278,10 @@ class Sound(Lump):
                 self.sample_rate = sample_rate
         else:
             raise ValueError("Unknown or invalid sound format")
-    
+
     def to_raw(self):
-        """Returns the raw values making up the sound as a byte string. 
-        
+        """Returns the raw values making up the sound as a byte string.
+
         The resulting values depend on the value of 'format'.
         For format 2, the value is returned an int.
         Otherwise the data is returned as a byte string.
@@ -312,7 +310,7 @@ class Sound(Lump):
                 sound = (file.read(dtype='int16') >> 8) + 128
                 if file.channels > 1:
                     sound = np.mean(sound, axis=1)
-                
+
                 # create new format 3 sound
                 self.from_raw(sound.astype('uint8').tobytes(), 3, file.samplerate)
 
@@ -322,14 +320,14 @@ class Sound(Lump):
         The output format is selected based on the filename extension.
         For example, "file.wav" saves to WAV format. If the file has
         no extension, WAV format is used.
-        
+
         See the PySoundFile documentation for possible values of 'subtype'.
         Possible values depend on the output format; if the given value is
         not supported, the format's default will be used.
 
         Special cases: ".lmp" saves the raw lump data, and ".raw" saves
-        the raw sound data."""
-
+        the raw sound data.
+        """
         format = os.path.splitext(filename)[1][1:].upper() or 'WAV'
         if   format == 'LMP': writefile(filename, self.data)
         elif format == 'RAW': writefile(filename, self.to_raw())
@@ -338,7 +336,7 @@ class Sound(Lump):
             elif check_format(format, 'PCM_U8'): subtype = 'PCM_U8'
             elif check_format(format, 'PCM_S8'): subtype = 'PCM_S8'
             else: subtype = None # use default for format
-        
+
             with SoundFile(filename, 'w', self.sample_rate, 1, subtype, format=format) as file:
                 # convert to signed 16-bit (since SoundFile doesn't directly support 8-bit input)
                 # the result will just be converted back in the file though
@@ -346,6 +344,7 @@ class Sound(Lump):
                 file.write(sound)
         else:
             raise TypeError("audio file export only supported for digitized sounds (format 3)")
+
 
 class Graphic(Lump):
     """Subclass of Lump, for Doom format graphics. Supports
@@ -390,10 +389,9 @@ class Graphic(Lump):
     def from_pixels(self, data, width, height, x_offset=0, y_offset=0):
         """Load a list of 8bpp pixels.
         Pixels with value None are transparent."""
-        
         if min(width, height) < 0 or max(width, height) > 32767:
             raise ValueError("image width and height must be between 0-32767")
-        
+
         # First pass: extract pixel data in column+post format
         columns_in = [data[n:width*height:width] for n in range(width)]
         columns_out = []
@@ -406,10 +404,10 @@ class Graphic(Lump):
             offset = 0
             for y in range(height):
                 # split at 128 for vanilla-compatible images without premature tiling
-                if height < 256: 
+                if height < 256:
                     if y == 128:
                         in_trans = True
-            
+
                 # for tall patch support
                 elif offset == 254:
                     in_trans = True
@@ -419,7 +417,7 @@ class Graphic(Lump):
                     postdata.append(bytearray())
                     # start relative offsets
                     offset = 0
-            
+
                 if column[y] is None:
                     in_trans = True
                 else:
@@ -432,7 +430,7 @@ class Graphic(Lump):
                             # reset relative offset for tall patches
                             offset = 0
                     postdata[-1].append(column[y])
-                
+
                 offset += 1
             columns_out.append(zip(start_rows, postdata))
         # Second pass: compile column+post data, adding pointers
@@ -452,7 +450,7 @@ class Graphic(Lump):
 
     def from_raw(self, data, width, height, x_offset=0, y_offset=0, pal=None):
         """Load a raw 8-bpp image, converting to the Doom picture format
-        (used by all graphics except flats)"""
+        (used by all graphics except flats)."""
         pal = pal or omg.palette.default
         pixels = [i if i != pal.tran_index else None for i in data]
         self.from_pixels(pixels, width, height, x_offset, y_offset)
@@ -475,7 +473,7 @@ class Graphic(Lump):
                 if offset <= y:
                     y += offset # for tall patches
                 else:
-                    y = offset				
+                    y = offset
                 post_length = data[pointer + 1]
                 op = y*width + x
                 for p in range(pointer + 3, pointer + post_length + 3):
@@ -485,21 +483,22 @@ class Graphic(Lump):
                     op += width
                 pointer += post_length + 4
         return output
-        
+
     def to_raw(self, tran_index=None):
         """Returns self converted to a raw (8-bpp) image.
 
         `tran_index` specifies the palette index to use for
         transparent pixels. The value defaults to that of the
-        Graphic object's palette instance."""
+        Graphic object's palette instance.
+        """
         tran_index = tran_index or self.palette.tran_index
         output = [i if i is not None else tran_index for i in self.to_pixels()]
         return bytes(bytearray(output))
 
     def to_Image(self, mode='P'):
-        """Convert to a PIL Image instance"""
+        """Convert to a PIL Image instance."""
         if mode != 'RGBA' or isinstance(self, Flat):
-            # target image has no alpha, 
+            # target image has no alpha,
             # or source image is a flat (which has no transparent pixels)
             im = Image.new('P', self.dimensions, None)
             if isinstance(self, Flat):
@@ -517,15 +516,15 @@ class Graphic(Lump):
             return im
 
     def from_Image(self, im, translate=False):
-        """Load from a PIL Image instance
+        """Load from a PIL Image instance.
 
         If the input image is 24-bit or 32-bit, the colors will be
         looked up in the current palette.
 
         If the input image is 8-bit, indices will simply be copied
         from the input image. To properly translate colors between
-        palettes, set the `translate` parameter."""
-
+        palettes, set the `translate` parameter.
+        """
         pixels = im.tobytes()
         width, height = im.size
         xoff, yoff = (width // 2)-1, height-5
@@ -534,13 +533,13 @@ class Graphic(Lump):
                 pixels[i*3:(i+1)*3])) for i in range(width*height)])
 
             self.from_raw(pixels, width, height, xoff, yoff, self.palette)
-        
+
         elif im.mode == "RGBA":
             pixels = [unpack('BBBB', pixels[i*4:(i+1)*4]) for i in range(width*height)]
             pixels = [self.palette.match(i[0:3]) if i[3] > 0 else None for i in pixels]
-            
+
             self.from_pixels(pixels, width, height, xoff, yoff)
-    
+
         elif im.mode == 'P':
             srcpal = im.palette.tobytes()
             if im.palette.mode == "RGB":
@@ -549,7 +548,7 @@ class Graphic(Lump):
                 palsize = 4
             else:
                 raise TypeError("palette mode must be 'RGB' or 'RGBA'")
-            
+
             if translate:
                 R = [c for c in srcpal[0::palsize]]
                 G = [c for c in srcpal[1::palsize]]
@@ -596,8 +595,8 @@ class Graphic(Lump):
 
         `mode` may be be 'P', 'RGB', or 'RGBA' for palette or 24/32 bit
         output, respectively. However, .raw ignores this parameter and
-        always writes in palette mode."""
-
+        always writes in palette mode.
+        """
         format = os.path.splitext(filename)[1][1:].upper()
         if   format == 'LMP': writefile(filename, self.data)
         elif format == 'RAW': writefile(filename, self.to_raw())
@@ -622,7 +621,7 @@ class Graphic(Lump):
 
 
 class Flat(Graphic):
-    """Subclass of Graphic, for flat graphics"""
+    """Subclass of Graphic, for flat graphics."""
 
     def get_dimensions(self):
         sz = len(self.data)

@@ -2,21 +2,21 @@ import os, hashlib, time
 from omg.util import *
 
 class Header(WADStruct):
-    """Class for WAD file headers"""
+    """Class for WAD file headers."""
     _fields_ = [
         ("type",    ctypes.c_char * 4),
         ("dir_len", ctypes.c_uint32),
         ("dir_ptr", ctypes.c_uint32)
     ]
-    
+
 class Entry(WADStruct):
-    """Class for WAD file entries"""
+    """Class for WAD file entries."""
     _fields_ = [
         ("ptr",  ctypes.c_uint32),
         ("size", ctypes.c_uint32),
         ("name", ctypes.c_char * 8),
     ]
-    
+
     def __init__(self, *args, **kwargs):
         self.been_read = False # Used by WAD loader
         super().__init__(*args, **kwargs)
@@ -26,13 +26,13 @@ class Entry(WADStruct):
 # or create a new one.
 
 def open_wad():
-    """Open an existing WAD, raise IOError if not found"""
+    """Open an existing WAD, raise IOError if not found."""
     if not os.path.exists(location):
         raise IOError
     return WadIO(location)
 
 def create_wad(location):
-    """Create a new WAD, raise IOError if exists"""
+    """Create a new WAD, raise IOError if exists."""
     if os.path.exists(location):
         raise IOError
     return WadIO(location)
@@ -48,7 +48,7 @@ class WadIO:
     saving by reading the value of the boolean attribute .issafe
 
     WadIO objects work on the WAD directory level. There is
-    very little magic available- you can't do things like automatic
+    very little magic available - you can't do things like automatic
     merging or managing sections, and Omgifol is never aware of
     what types lumps are. In other words, you're doing things more
     or less manually, with the hard binary content of lumps and
@@ -92,7 +92,7 @@ class WadIO:
             except IOError:
                 # assume file is read-only
                 self.basefile = open(filename, 'rb')
-            
+
             filesize = os.stat(self.basefile.name)[6]
             self.header = h = Header(bytes=self.basefile.read(ctypes.sizeof(Header)))
             if (not h.type in ("PWAD", "IWAD")) or filesize < 12:
@@ -109,7 +109,7 @@ class WadIO:
             self.basefile.flush()
 
     def close(self):
-        """Close the base file"""
+        """Close the base file."""
         assert self.basefile
         # Unfortunately, a save can't be forced here.
         if not self.issafe:
@@ -179,7 +179,7 @@ class WadIO:
         self.basefile.write(data)
 
     def write_append(self, data):
-        """Write data at the end of the file"""
+        """Write data at the end of the file."""
         self.basefile.seek(0, 2)
         self.basefile.write(data)
 
@@ -190,7 +190,7 @@ class WadIO:
         """
         self.basefile.seek(0, 2)
         pos = self.basefile.tell()
-        
+
         # Find the earliest available free space
         # (or, if free space reaches to the end of the file, use it)
         for p in self.calc_waste()[1]:
@@ -198,14 +198,14 @@ class WadIO:
                 pos = p[0]
                 self.basefile.seek(pos)
                 break
-        
+
         self.basefile.write(data)
         return pos
 
     def insert(self, name, data, index=None, use_free=True):
         """Insert a new entry at the optional index (defaults to
         appending).
-        
+
         If use_free is true, existing free space in the WAD will
         be used, if possible."""
         assert self.basefile
@@ -214,7 +214,7 @@ class WadIO:
         except:
             index = None
         self.issafe = False
-        
+
         if len(data) == 0:
             pos = 0
         elif use_free:
@@ -224,7 +224,7 @@ class WadIO:
             self.basefile.seek(0, 2)
             pos = self.basefile.tell()
             self.basefile.write(data)
-        
+
         if index is None:
             self.entries.append(Entry(pos, len(data), name))
         else:
@@ -239,7 +239,7 @@ class WadIO:
         id = self.select(id)
         if len(data) != self.entries[id].size:
             self.issafe = False
-        
+
         if len(data) == 0:
             self.entries[i].ptr = 0
         elif len(data) <= self.entries[id].size:
@@ -333,7 +333,7 @@ class WadIO:
         # Add info about wasted space in the WAD, to find out how much of an
         # improvement a rewrite() would make
         total, wasted = self.calc_waste()
-        s.append("\n\nWasted space:\n\n")
+        s.append("\nWasted space:\n\n")
         s.append("    %s bytes total\n" % str(total))
         for w in wasted:
             s.append("    %i bytes starting at 0x%x\n" % (w[1]-w[0], w[0]))

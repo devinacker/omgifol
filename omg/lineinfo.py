@@ -3,7 +3,6 @@ lineinfo.py -- dealing with Doom linedef trigger types.
 Provides functions to create a human-readable description
 code from a trigger number, and the inverse operation.
 
-
 Guide to Trigger Description Codes (R):
 
 Example:        "FLOOR SR UP SLOW CRUSH LNC-8"
@@ -444,7 +443,7 @@ trigcompat = \
   2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 
 def check_compat(num):
-    """Check the compatibility for a trigger number"""
+    """Check the compatibility for a trigger number."""
     if 8192 <= num < 32768:
         return "BOOM GENERALIZED"
     try:

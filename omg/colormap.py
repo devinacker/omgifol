@@ -47,17 +47,15 @@ class Colormap:
 
     def to_lump(self):
         """Pack to a COLORMAP lump."""
-        
         output = bytes()
         for t in self.tables:
             output += bytes(t)
-                
         return omg.lump.Lump(output)
-        
+
         # packed = [''.join([chr(c) for c in t]) for t in self.tables]
         # return omg.lump.Lump(''.join(packed))
-        
+
     def set_position(self,table,index,pal_index):
         """Sets a specified position in the colormap to the specified
-        index in the playpal"""
+        index in the playpal."""
         self.tables[table][index] = pal_index
