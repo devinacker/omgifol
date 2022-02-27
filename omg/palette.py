@@ -29,10 +29,9 @@ class Palette:
     """
 
     def __init__(self, colors=None, tran_index=None, tran_color=None):
-
         """Creates a new Palette object. The 'colors' argument may be
         either a list of (r,g,b) tuples or an RGBRGBRGB... string/bytes.
-        'tran_index' specifies the index in the palette where the 
+        'tran_index' specifies the index in the palette where the
         transparent color should be placed. Note that this is only used
         when saving images, and thus doesn't affect color lookups.
         'tran_color' is the color to use for transparency."""

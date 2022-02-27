@@ -12,7 +12,7 @@ class TextureDef(WADStruct):
         ("dummy2",   ctypes.c_uint32),
         ("npatches", ctypes.c_int16),
     ]
-    
+
     def __init__(self, *args, **kwargs):
         self.name = "-"
         self.patches = []
@@ -27,7 +27,7 @@ class PatchDef(WADStruct):
         ("dummy1", ctypes.c_uint16),
         ("dummy2", ctypes.c_uint16)
     ]
-    
+
     def __init__(self, *args, **kwargs):
         self.name = "-"
         self.id = -1
@@ -124,4 +124,3 @@ class Textures(OrderedDict):
         self[name].patches.append(PatchDef())
         self[name].patches[0].name = self[name].name = name
         self[name].width, self[name].height = plump.dimensions
-

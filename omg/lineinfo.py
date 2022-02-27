@@ -3,7 +3,6 @@ lineinfo.py -- dealing with Doom linedef trigger types.
 Provides functions to create a human-readable description
 code from a trigger number, and the inverse operation.
 
-
 Guide to Trigger Description Codes (R):
 
 Example:        "FLOOR SR UP SLOW CRUSH LNC-8"

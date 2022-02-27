@@ -8,7 +8,7 @@ class Header(WADStruct):
         ("dir_len", ctypes.c_uint32),
         ("dir_ptr", ctypes.c_uint32)
     ]
-    
+
 class Entry(WADStruct):
     """Class for WAD file entries."""
     _fields_ = [
@@ -16,7 +16,7 @@ class Entry(WADStruct):
         ("size", ctypes.c_uint32),
         ("name", ctypes.c_char * 8),
     ]
-    
+
     def __init__(self, *args, **kwargs):
         self.been_read = False # Used by WAD loader
         super().__init__(*args, **kwargs)
@@ -92,7 +92,7 @@ class WadIO:
             except IOError:
                 # assume file is read-only
                 self.basefile = open(filename, 'rb')
-            
+
             filesize = os.stat(self.basefile.name)[6]
             self.header = h = Header(bytes=self.basefile.read(ctypes.sizeof(Header)))
             if (not h.type in ("PWAD", "IWAD")) or filesize < 12:
@@ -190,7 +190,7 @@ class WadIO:
         """
         self.basefile.seek(0, 2)
         pos = self.basefile.tell()
-        
+
         # Find the earliest available free space
         # (or, if free space reaches to the end of the file, use it)
         for p in self.calc_waste()[1]:
@@ -198,14 +198,14 @@ class WadIO:
                 pos = p[0]
                 self.basefile.seek(pos)
                 break
-        
+
         self.basefile.write(data)
         return pos
 
     def insert(self, name, data, index=None, use_free=True):
         """Insert a new entry at the optional index (defaults to
         appending).
-        
+
         If use_free is true, existing free space in the WAD will
         be used, if possible."""
         assert self.basefile
@@ -214,7 +214,7 @@ class WadIO:
         except:
             index = None
         self.issafe = False
-        
+
         if len(data) == 0:
             pos = 0
         elif use_free:
@@ -224,7 +224,7 @@ class WadIO:
             self.basefile.seek(0, 2)
             pos = self.basefile.tell()
             self.basefile.write(data)
-        
+
         if index is None:
             self.entries.append(Entry(pos, len(data), name))
         else:
@@ -239,7 +239,7 @@ class WadIO:
         id = self.select(id)
         if len(data) != self.entries[id].size:
             self.issafe = False
-        
+
         if len(data) == 0:
             self.entries[i].ptr = 0
         elif len(data) <= self.entries[id].size:

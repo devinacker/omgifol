@@ -26,7 +26,7 @@ class LumpGroup(OrderedDict):
 
     def to_file(self, filename, use_free=True):
         """Save group as a separate WAD file.
-        
+
         If use_free is true, existing free space in the WAD will
         be used, if possible."""
         w = WadIO(filename)
@@ -40,7 +40,7 @@ class LumpGroup(OrderedDict):
 
     def save_wadio(self, wadio, use_free=True):
         """Save to a WadIO object.
-        
+
         If use_free is true, existing free space in the WAD will
         be used, if possible."""
         for m in self:
@@ -96,7 +96,7 @@ class MarkerGroup(LumpGroup):
 
     def save_wadio(self, wadio, use_free=True):
         """Save to a WadIO object.
-        
+
         If use_free is true, existing free space in the WAD will
         be used, if possible."""
         if len(self) == 0:
@@ -143,7 +143,7 @@ class HeaderGroup(LumpGroup):
 
     def save_wadio(self, wadio, use_free=True):
         """Save to a WadIO object.
-        
+
         If use_free is true, existing free space in the WAD will
         be used, if possible."""
         for h in self:
