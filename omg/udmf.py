@@ -45,12 +45,12 @@ class UBlock:
         return out
 
 class UParser:
-    IDENTIFIER_RE = r'[A-Za-z_]+[A-Za-z0-9_]*'
-    INTEGER_RE = r'([+-]?[1-9]+[0-9]*)|(0[0-7]+)|(0x[0-9A-Fa-f]+)|(0)'
-    FLOAT_RE = r'[+-]?[0-9]+\.[0-9]*([eE][+-]?[0-9]+)?'
-    QUOTED_STRING_RE = r'"([^"\\]*(\\.[^"\\]*)*)"'
-    KEYWORD_RE = r'[^{}();"\'\n\t ]+'
-    WHITESPACE_RE = r'(\s|(\n|^)//[^\n]+|/\*(\*(?!\/)|[^*])*\*/)+'
+    IDENTIFIER_RE    = re.compile(rb'[A-Za-z_]+[A-Za-z0-9_]*')
+    INTEGER_RE       = re.compile(rb'([+-]?[1-9]+[0-9]*)|(0[0-7]+)|(0x[0-9A-Fa-f]+)|(0)')
+    FLOAT_RE         = re.compile(rb'[+-]?[0-9]+\.[0-9]*([eE][+-]?[0-9]+)?')
+    QUOTED_STRING_RE = re.compile(rb'"([^"\\]*(\\.[^"\\]*)*)"')
+    KEYWORD_RE       = re.compile(rb'[^{}();"\'\n\t ]+')
+    WHITESPACE_RE    = re.compile(rb'(\s|(\n|^)//[^\n]+|/\*(\*(?!\/)|[^*])*\*/)+')
     def __init__(self, blocktypes):
         self.blocktypes = blocktypes
         self.src = None
@@ -60,7 +60,7 @@ class UParser:
 
     def skip_ws(self):
         while True:
-            ws = re.match(UParser.WHITESPACE_RE, self.src[self.ptr:])
+            ws = UParser.WHITESPACE_RE.match(self.src[self.ptr:])
             if ws:
                 self.line += len([x for x in ws[0] if x == '\n'])
                 self.ptr += ws.end()
@@ -68,6 +68,8 @@ class UParser:
                 break
 
     def peek(self, expr):
+        if isinstance(expr, re.Pattern):
+            return expr.match(self.src[self.ptr:])
         return re.match(expr, self.src[self.ptr:])
 
     def accept(self, expr):
@@ -86,7 +88,7 @@ class UParser:
         if self.ptr == len(self.src):
             got = 'EOF'
         else:
-            got = re.search(UParser.WHITESPACE_RE, self.src[self.ptr:])
+            got = UParser.WHITESPACE_RE.search(self.src[self.ptr:])
             if got:
                 got = self.src[self.ptr:got.pos]
             else:
@@ -94,7 +96,7 @@ class UParser:
         raise Exception('line {0}: expected {1} got {2}'.format(self.line, expr, got))
 
     def parse(self, src):
-        self.src = src
+        self.src = memoryview(src)
         self.ptr = 0
         self.line = 1
         toplevel = {}
@@ -102,13 +104,13 @@ class UParser:
         self.skip_ws()
         while self.ptr < len(self.src):
             name = self.identifier().lower()
-            if self.accept('='):
+            if self.accept(b'='):
                 value = self.value()
-                self.expect(r';')
+                self.expect(rb';')
                 toplevel[name] = value
-            elif self.accept('{'):
+            elif self.accept(b'{'):
                 fields = self.expr_list()
-                self.expect(r'}')
+                self.expect(rb'}')
                 blockclass = self.blocktypes.get(name, UBlock)
                 group = blocks.setdefault(name, [])
                 group.append(blockclass(**fields))
@@ -123,14 +125,14 @@ class UParser:
 
     def assignment_expr(self):
         key = self.identifier().lower()
-        self.expect(r'=')
+        self.expect(rb'=')
         value = self.value()
-        self.expect(r';')
+        self.expect(rb';')
         return key, value
 
     def identifier(self):
         self.expect(UParser.IDENTIFIER_RE)
-        return self.match[0]
+        return self.match[0].decode()
 
     def value(self):
         if self.accept(UParser.FLOAT_RE):
@@ -145,9 +147,9 @@ class UParser:
             if self.match[4]:
                 return 0
         if self.accept(UParser.QUOTED_STRING_RE):
-            return self.match[1]
+            return self.match[1].decode()
         if self.accept(UParser.KEYWORD_RE):
-            return self.match[0]
+            return self.match[0].decode()
         raise Exception('expected integer, float, string, or bool')
 
 class UVertex(UBlock):
@@ -268,7 +270,7 @@ class UMapEditor:
             return
 
         parser = UParser(udmf_types)
-        toplevel, blocks = parser.parse(lumpgroup["TEXTMAP"].data.decode())
+        toplevel, blocks = parser.parse(lumpgroup["TEXTMAP"].data)
         for (t, cls) in udmf_types.items():
             setattr(self, cls.storage, blocks[t] if t in blocks else [])
             if namespace is not None:
@@ -333,8 +335,6 @@ class UMapEditor:
 
             if linedef.back != -1:
                 block.sideback = linedef.back
-            if not hexencompat and linedef.tag:
-                block.id = block.arg0 = linedef.tag
             
             for f in range(len(ULinedef.flags[namespace])):
                 flag = ULinedef.flags[namespace][f]
@@ -355,7 +355,11 @@ class UMapEditor:
                     trigger = ((linedef.flags & 0x1c00) >> 10)
                     if trigger < len(ULinedef.triggers_hexen):
                         setattr(block, ULinedef.triggers_hexen[trigger], True)
-                    
+            else:
+                if linedef.action:
+                    block.special = linedef.action
+                if linedef.tag:
+                    block.id = block.arg0 = linedef.tag
 
         for sidedef in m.sidedefs:
             block = USidedef(sidedef.sector)
