@@ -138,7 +138,7 @@ class HeaderGroup(LumpGroup):
                         self.lumptype(wadio.read(i))
                     wadio.entries[i].been_read = True
                     i += 1
-                    if wccmp(wadio.entries[i].name, self.tail[-1]):
+                    if wccmp(wadio.entries[i - 1].name, self.tail[-1]):
                         break
             if not added:
                 i += 1
