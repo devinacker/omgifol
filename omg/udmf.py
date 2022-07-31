@@ -188,7 +188,7 @@ class ULinedef(UBlock):
             'clipmidtex','wrapmidtex','midtex3d',
             'checkswitchrange','firstsideonly']
     triggers_hexen = [
-            'playeruse','monstercross','impact',
+            'playercross','playeruse','monstercross','impact',
             'playerpush','missilecross','blocking']
 
     def __init__(self, v1=None, v2=None, sidefront=None, **kwargs):
@@ -305,10 +305,7 @@ class UMapEditor:
         for thing in m.things:
             block = UThing(float(thing.x), float(thing.y), thing.type)
             self.things.append(block)
-            if hexencompat and thing.tid != 0:
-                block.id = thing.tid
-            if hexencompat and thing.height != 0:
-                block.height = float(thing.height)
+            
             if thing.angle != 0:
                 block.angle = thing.angle
 
@@ -319,14 +316,18 @@ class UMapEditor:
                     check = flag[0] != '!'
                     setattr(block, flag, bool(thing.flags & (1 << f)) == check)
 
-            if hexencompat and thing.action:
-                block.special = thing.action
+            if hexencompat:
+                if thing.tid != 0:
+                    block.id = thing.tid
+                if thing.height != 0:
+                    block.height = float(thing.height)
+                if thing.action:
+                    block.special = thing.action
                 for i in range(5):
                     key = 'arg{0}'.format(i)
                     setattr(block, key, getattr(thing, key))
 
         for linedef in m.linedefs:
-
             block = ULinedef(linedef.vx_a, linedef.vx_b, linedef.front)
             self.linedefs.append(block)
 
@@ -334,28 +335,29 @@ class UMapEditor:
                 block.sideback = linedef.back
             if not hexencompat and linedef.tag:
                 block.id = block.arg0 = linedef.tag
-            if hexencompat and linedef.action == 121:
-                block.id = linedef.arg0 + linedef.arg4 * 256
-            if hexencompat and linedef.action and linedef.action != 121:
-                block.special = linedef.action
-                for i in range(5):
-                    key = 'arg{0}'.format(i)
-                    setattr(block, key, getattr(linedef, key))
-
+            
             for f in range(len(ULinedef.flags[namespace])):
                 flag = ULinedef.flags[namespace][f]
                 if flag:
-                    setattr(block, flag, linedef.flags & (1 << f))
+                    setattr(block, flag, bool(linedef.flags & (1 << f)))
+                    
             if hexencompat:
-                trigger = ((linedef.flags & 0x1c00) >> 10) - 1
-                if trigger >= 0 and trigger < len(ULinedef.triggers_hexen):
-                    setattr(block, ULinedef.triggers_hexen[trigger], True)
-            if hexencompat and linedef.action == 121:
-                for f in range(len(ULinedef.moreflags_hexen)):
-                    setattr(block, ULinedef.moreflags_hexen[f], linedef.arg1 & (1 << f))
+                if linedef.action == 121:
+                    block.id = linedef.arg0 + linedef.arg4 * 256
+                    for f in range(len(ULinedef.moreflags_hexen)):
+                        setattr(block, ULinedef.moreflags_hexen[f], bool(linedef.arg1 & (1 << f)))
+                elif linedef.action:
+                    block.special = linedef.action
+                    for i in range(5):
+                        key = 'arg{0}'.format(i)
+                        setattr(block, key, getattr(linedef, key))
+                    
+                    trigger = ((linedef.flags & 0x1c00) >> 10)
+                    if trigger < len(ULinedef.triggers_hexen):
+                        setattr(block, ULinedef.triggers_hexen[trigger], True)
+                    
 
         for sidedef in m.sidedefs:
-
             block = USidedef(sidedef.sector)
             self.sidedefs.append(block)
 
@@ -371,12 +373,10 @@ class UMapEditor:
                 block.texturemiddle = sidedef.tx_mid
 
         for vertex in m.vertexes:
-
             block = UVertex(float(vertex.x), float(vertex.y))
             self.vertexes.append(block)
 
         for sector in m.sectors:
-
             block = USector(sector.tx_floor, sector.tx_ceil)
             self.sectors.append(block)
 
@@ -393,7 +393,7 @@ class UMapEditor:
 
     def to_lumps(self):
         m = NameGroup()
-        m['_HEADER'] = Lump()
+        m['_HEADER_'] = Lump()
         m['TEXTMAP'] = Lump(str.encode(self.to_textmap()))
         if self.behavior:
             m['BEHAVIOR'] = self.behavior

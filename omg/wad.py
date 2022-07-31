@@ -126,8 +126,8 @@ class HeaderGroup(LumpGroup):
             # now search only using tail lumps so that any map with map lumps is loaded correctly
             # look for at least 2 tail lumps in order to avoid false positives
             if i < numlumps - 2 \
-               and inwclist(wadio.entries[i + 1].name, self.tail) \
-               and inwclist(wadio.entries[i + 2].name, self.tail):
+               and wccmp(wadio.entries[i + 1].name, self.tail[0]) \
+               and wccmp(wadio.entries[i + 2].name, self.tail[1]):
                 added = True
                 self[name] = NameGroup()
                 self[name]["_HEADER_"] = Lump(wadio.read(i))
@@ -138,6 +138,8 @@ class HeaderGroup(LumpGroup):
                         self.lumptype(wadio.read(i))
                     wadio.entries[i].been_read = True
                     i += 1
+                    if wccmp(wadio.entries[i].name, self.tail[-1]):
+                        break
             if not added:
                 i += 1
 
@@ -147,15 +149,19 @@ class HeaderGroup(LumpGroup):
         If use_free is true, existing free space in the WAD will
         be used, if possible."""
         for h in self:
-            hs = self[h]
+            hs = copy(self[h]) # temporary shallow copy
             try:
                 wadio.insert(h, hs["_HEADER_"].data, use_free=use_free)
+                del hs["_HEADER_"]
             except KeyError:
                 wadio.insert(h, bytes())
             for t in self.tail:
                 try:
-                    name = wcinlist(hs, t)[0]
-                    wadio.insert(name, hs[name].data, use_free=use_free)
+                    # for UDMF maps, a wildcard is used to handle anything between 'TEXTMAP' and 'ENDMAP'
+                    # after writing lumps, remove them from the shallow copy so the wildcard doesn't include them again
+                    for name in wcinlist(hs, t):
+                        wadio.insert(name, hs[name].data, use_free=use_free)
+                        del hs[name]
                 except IndexError:
                     pass
 
@@ -200,7 +206,7 @@ _maptail    = ['THINGS',   'LINEDEFS', 'SIDEDEFS', # Must be in order
                'VERTEXES', 'SEGS',     'SSECTORS',
                'NODES',    'SECTORS',  'REJECT',
                'BLOCKMAP', 'BEHAVIOR', 'SCRIPT*']
-_udmfmaptail  = ['TEXTMAP', 'BEHAVIOR', 'SCRIPT*', 'ENDMAP']
+_udmfmaptail  = ['TEXTMAP', '*', 'ENDMAP']
 _glmaptail    = ['GL_VERT', 'GL_SEGS', 'GL_SSECT', 'GL_NODES']
 _graphics     = ['TITLEPIC', 'CWILV*', 'WI*', 'M_*',
                  'INTERPIC', 'BRDR*',  'PFUB?', 'ST*',
