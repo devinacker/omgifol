@@ -1,5 +1,5 @@
 import re
-from omg.mapedit import MapEditor, ZThing
+from omg.mapedit import MapEditor, Linedef
 from omg.wad import NameGroup
 from omg.lump import Lump
 
@@ -180,10 +180,13 @@ class ULinedef(UBlock):
     flags['Heretic'] = flags['_Base']
     flags['Hexen'] = flags['_Base'] + [
             'repeatspecial',None,None,None,
-            'monsteractivate','blockplayers','blockeverything']
-    flags['Strife'] = flags['_Base']
+            'monsteractivate',None,'blockeverything']
+    flags['Strife'] = flags['_Base'] + [
+            'jumpover','blockfloating',
+            'translucent','transparent']
     flags['ZDoom'] = flags['Hexen']
     flags['ZDoom'][14] = 'blockplayers'
+    flags['Eternity'] = flags['_Base'] + ['midtex3d']
 
     moreflags_hexen = [
             'zoneboundary','jumpover','blockfloaters',
@@ -294,15 +297,17 @@ class UMapEditor:
         self.sectors = []
         self.things = []
         self.namespace = namespace
+        
+        hexencompat = 'BEHAVIOR' in lumpgroup
         if namespace not in udmf_namespaces:
-            namespace = udmf_namespaces[0]
-        hexencompat = namespace in ('ZDoom', 'Hexen') and m.Thing == ZThing
+            namespace = 'ZDoom' if hexencompat else udmf_namespaces[0]
 
         if hexencompat:
-            if 'BEHAVIOR' in lumpgroup:
-                self.behavior = lumpgroup['BEHAVIOR']
-            if 'SCRIPTS' in lumpgroup:
-                self.scripts = lumpgroup['SCRIPTS']
+            try:
+                self.behavior = m.behavior
+                self.scripts = m.scripts
+            except AttributeError:
+                pass
 
         for thing in m.things:
             block = UThing(float(thing.x), float(thing.y), thing.type)
@@ -319,12 +324,9 @@ class UMapEditor:
                     setattr(block, flag, bool(thing.flags & (1 << f)) == check)
 
             if hexencompat:
-                if thing.tid != 0:
-                    block.id = thing.tid
-                if thing.height != 0:
-                    block.height = float(thing.height)
-                if thing.action:
-                    block.special = thing.action
+                block.id = thing.tid
+                block.height = float(thing.height)
+                block.special = thing.action
                 for i in range(5):
                     key = 'arg{0}'.format(i)
                     setattr(block, key, getattr(thing, key))
@@ -333,7 +335,7 @@ class UMapEditor:
             block = ULinedef(linedef.vx_a, linedef.vx_b, linedef.front)
             self.linedefs.append(block)
 
-            if linedef.back != linedef.NONE:
+            if linedef.back != Linedef.NONE:
                 block.sideback = linedef.back
             
             for f in range(len(ULinedef.flags[namespace])):
@@ -356,25 +358,18 @@ class UMapEditor:
                     if trigger < len(ULinedef.triggers_hexen):
                         setattr(block, ULinedef.triggers_hexen[trigger], True)
             else:
-                if linedef.action:
-                    block.special = linedef.action
-                if linedef.tag:
-                    block.id = block.arg0 = linedef.tag
+                block.special = linedef.action
+                block.id = block.arg0 = linedef.tag
 
         for sidedef in m.sidedefs:
             block = USidedef(sidedef.sector)
             self.sidedefs.append(block)
 
-            if sidedef.off_x != 0:
-                block.offsetx = sidedef.off_x
-            if sidedef.off_y != 0:
-                block.offsety = sidedef.off_y
-            if sidedef.tx_up != '-':
-                block.texturetop = sidedef.tx_up
-            if sidedef.tx_low != '-':
-                block.texturebottom = sidedef.tx_low
-            if sidedef.tx_mid != '-':
-                block.texturemiddle = sidedef.tx_mid
+            block.offsetx = sidedef.off_x
+            block.offsety = sidedef.off_y
+            block.texturetop = sidedef.tx_up
+            block.texturebottom = sidedef.tx_low
+            block.texturemiddle = sidedef.tx_mid
 
         for vertex in m.vertexes:
             block = UVertex(float(vertex.x), float(vertex.y))
@@ -384,16 +379,11 @@ class UMapEditor:
             block = USector(sector.tx_floor, sector.tx_ceil)
             self.sectors.append(block)
 
-            if sector.z_floor != 0:
-                block.heightfloor = sector.z_floor
-            if sector.z_ceil != 0:
-                block.heightceiling = sector.z_ceil
-            if sector.light != 160:
-                block.lightlevel = sector.light
-            if sector.type != 0:
-                block.special = sector.type
-            if sector.tag != 0:
-                block.id = sector.tag
+            block.heightfloor = sector.z_floor
+            block.heightceiling = sector.z_ceil
+            block.lightlevel = sector.light
+            block.special = sector.type
+            block.id = sector.tag
 
     def to_lumps(self):
         m = NameGroup()
