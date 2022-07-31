@@ -333,7 +333,7 @@ class UMapEditor:
             block = ULinedef(linedef.vx_a, linedef.vx_b, linedef.front)
             self.linedefs.append(block)
 
-            if linedef.back != -1:
+            if linedef.back != linedef.NONE:
                 block.sideback = linedef.back
             
             for f in range(len(ULinedef.flags[namespace])):
