@@ -345,19 +345,47 @@ class UMapEditor:
                     setattr(block, flag, bool(linedef.flags & (1 << f)))
                     
             if hexencompat:
-                if linedef.action == 121:
+                block.special = linedef.action
+                for i in range(5):
+                    key = 'arg{0}'.format(i)
+                    setattr(block, key, getattr(linedef, key))
+                
+                trigger = ((linedef.flags & 0x1c00) >> 10)
+                if trigger < len(ULinedef.triggers_hexen):
+                    setattr(block, ULinedef.triggers_hexen[trigger], True)
+                
+                # handle line specials that set a line ID, extended flags, etc. based on the zdoom udmf spec
+                if linedef.action == 1: # Polyobj_StartLine
+                    block.id = linedef.arg3
+                    block.arg3 = 0
+                elif linedef.action == 5: # Polyobj_ExplicitLine
+                    block.id = linedef.arg4
+                    block.arg4 = 0
+                elif linedef.action == 121: # Line_SetIdentification
                     block.id = linedef.arg0 + linedef.arg4 * 256
                     for f in range(len(ULinedef.moreflags_hexen)):
                         setattr(block, ULinedef.moreflags_hexen[f], bool(linedef.arg1 & (1 << f)))
-                elif linedef.action:
-                    block.special = linedef.action
-                    for i in range(5):
-                        key = 'arg{0}'.format(i)
-                        setattr(block, key, getattr(linedef, key))
-                    
-                    trigger = ((linedef.flags & 0x1c00) >> 10)
-                    if trigger < len(ULinedef.triggers_hexen):
-                        setattr(block, ULinedef.triggers_hexen[trigger], True)
+                    block.special = 0
+                elif linedef.action == 160: # Sector_Set3dFloor
+                    if linedef.arg1 & 8:
+                        block.id = linedef.arg4
+                        block.arg1 &= ~8
+                    else:
+                        block.arg0 += linedef.arg4 * 256
+                    block.arg4 = 0
+                elif linedef.action == 181: # Plane_Align
+                    block.id = linedef.arg2
+                    block.arg2 = 0
+                elif linedef.action == 208: # TranslucentLine
+                    block.id = linedef.arg0 # preserve arg0 according to spec
+                    for f in range(len(ULinedef.moreflags_hexen)):
+                        setattr(block, ULinedef.moreflags_hexen[f], bool(linedef.arg3 & (1 << f)))
+                    block.arg3 = 0
+                elif linedef.action == 215: # Teleport_Line
+                    block.id = linedef.arg0
+                    block.arg0 = 0
+                elif linedef.action == 222: # Scroll_Texture_Model
+                    block.id = linedef.arg0 # preserve arg0 according to spec
             else:
                 block.special = linedef.action
                 block.id = block.arg0 = linedef.tag
