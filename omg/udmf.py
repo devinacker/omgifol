@@ -17,6 +17,7 @@ class UBlock:
     defaults = {}
 
     def __init__(self, **kwargs):
+        self.__dict__.update(type(self).defaults)
         self.__dict__.update(kwargs)
     def __getattr__(self, name):
         return self.__dict__.get(name, None)
@@ -155,17 +156,17 @@ class UParser:
 class UVertex(UBlock):
     storage = 'vertexes'
     def __init__(self, x=0.0, y=0.0, **kwargs):
-        super().__init__(**kwargs)
         self.x = x
         self.y = y
+        super().__init__(**kwargs)
 
 class USidedef(UBlock):
     storage = 'sidedefs'
     defaults = {'texturetop': '-', 'texturebottom': '-', 'texturemiddle': '-',
             'offsetx': 0, 'offsety': 0}
     def __init__(self, sector=None, **kwargs):
-        super().__init__(**kwargs)
         self.sector = sector
+        super().__init__(**kwargs)
 
 class ULinedef(UBlock):
     storage = 'linedefs'
@@ -197,10 +198,10 @@ class ULinedef(UBlock):
             'playerpush','missilecross','blocking']
 
     def __init__(self, v1=None, v2=None, sidefront=None, **kwargs):
-        super().__init__(**kwargs)
         self.v1 = v1
         self.v2 = v2
         self.sidefront = sidefront
+        super().__init__(**kwargs)
 
 class USector(UBlock):
     storage = 'sectors'
@@ -212,9 +213,9 @@ class USector(UBlock):
       'id': 0
       }
     def __init__(self, texturefloor='-', textureceiling='-', **kwargs):
-        super().__init__(**kwargs)
         self.texturefloor = texturefloor
         self.textureceiling = textureceiling
+        super().__init__(**kwargs)
 
 class UThing(UBlock):
     storage = 'things'
@@ -238,10 +239,10 @@ class UThing(UBlock):
             'translucent','invisible','strifeally','standing']
 
     def __init__(self, x=0.0, y=0.0, ednum=0, **kwargs):
-        super().__init__(**kwargs)
         self.x = x
         self.y = y
         self.type = ednum
+        super().__init__(**kwargs)
 
 udmf_types = {
         'thing': UThing,
