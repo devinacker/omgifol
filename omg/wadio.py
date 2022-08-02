@@ -9,6 +9,10 @@ class Header(WADStruct):
         ("dir_ptr", ctypes.c_uint32)
     ]
 
+    def __init__(self, *args, **kwargs):
+        self.type = "PWAD"
+        super().__init__(*args, **kwargs)
+
 class Entry(WADStruct):
     """Class for WAD file entries."""
     _fields_ = [
