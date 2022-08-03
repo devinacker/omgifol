@@ -63,7 +63,7 @@ class UParser:
         while True:
             ws = UParser.WHITESPACE_RE.match(self.src[self.ptr:])
             if ws:
-                self.line += len([x for x in ws[0] if x == '\n'])
+                self.line += len([x for x in ws[0] if chr(x) == '\n'])
                 self.ptr += ws.end()
             else:
                 break
@@ -77,7 +77,7 @@ class UParser:
         match = self.peek(expr)
         if match:
             self.match = match
-            self.line += len([x for x in match[0] if x == '\n'])
+            self.line += len([x for x in match[0] if chr(x) == '\n'])
             self.ptr += match.end()
             self.skip_ws()
         return match
@@ -91,10 +91,10 @@ class UParser:
         else:
             got = UParser.WHITESPACE_RE.search(self.src[self.ptr:])
             if got:
-                got = self.src[self.ptr:got.pos]
+                got = self.src[self.ptr:self.ptr+got.start()]
             else:
                 got = self.src[self.ptr:]
-        raise Exception('line {0}: expected {1} got {2}'.format(self.line, expr, got))
+        raise Exception("line {0}: expected '{1}', got '{2}'".format(self.line, expr.decode(), got.tobytes().decode()))
 
     def parse(self, src):
         self.src = memoryview(src)
