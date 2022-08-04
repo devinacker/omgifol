@@ -284,11 +284,10 @@ class UMapEditor:
             else:
                 self.namespace = None
 
-        if self.namespace in ('ZDoom', 'Hexen'):
-            if 'BEHAVIOR' in lumpgroup:
-                self.behavior = lumpgroup['BEHAVIOR']
-            if 'SCRIPTS' in lumpgroup:
-                self.scripts = lumpgroup['SCRIPTS']
+        if 'BEHAVIOR' in lumpgroup:
+            self.behavior = lumpgroup['BEHAVIOR']
+        if 'SCRIPTS' in lumpgroup:
+            self.scripts = lumpgroup['SCRIPTS']
 
     def from_oldformat(self, lumpgroup, namespace):
         m = MapEditor(lumpgroup)
@@ -302,6 +301,8 @@ class UMapEditor:
         hexencompat = 'BEHAVIOR' in lumpgroup
         if namespace not in udmf_namespaces:
             namespace = 'ZDoom' if hexencompat else udmf_namespaces[0]
+        if not self.namespace:
+            self.namespace = namespace
 
         if hexencompat:
             try:
