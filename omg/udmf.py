@@ -329,8 +329,10 @@ class UMapEditor:
                 if not UThing.flags[namespace][f]:
                     continue
                 for flag in UThing.flags[namespace][f].split(','):
-                    check = flag[0] != '!'
-                    setattr(block, flag, bool(thing.flags & (1 << f)) == check)
+                    if flag[0] != '!':
+                        setattr(block, flag, bool(thing.flags & (1 << f)))
+                    else:
+                        setattr(block, flag[1:], not bool(thing.flags & (1 << f)))
 
             if hexencompat:
                 block.id = thing.tid
