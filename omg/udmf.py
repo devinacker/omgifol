@@ -74,6 +74,17 @@ class UParser:
             return expr.match(self.src[self.ptr:])
         return re.match(expr, self.src[self.ptr:])
 
+    def error_token(self):
+        if self.ptr == len(self.src):
+            return 'EOF'
+        else:
+            got = UParser.WHITESPACE_RE.search(self.src[self.ptr:])
+            if got:
+                got = self.src[self.ptr:self.ptr+got.start()]
+            else:
+                got = self.src[self.ptr:]
+            return "'{0}'".format(got.tobytes().decode())
+
     def accept(self, expr):
         match = self.peek(expr)
         if match:
@@ -87,15 +98,7 @@ class UParser:
         match = self.accept(expr)
         if match:
             return match
-        if self.ptr == len(self.src):
-            got = 'EOF'
-        else:
-            got = UParser.WHITESPACE_RE.search(self.src[self.ptr:])
-            if got:
-                got = self.src[self.ptr:self.ptr+got.start()]
-            else:
-                got = self.src[self.ptr:]
-        raise Exception("line {0}: expected '{1}', got '{2}'".format(self.line, expr.decode(), got.tobytes().decode()))
+        raise Exception("line {0}: expected '{1}', got {2}".format(self.line, expr.decode(), self.error_token()))
 
     def parse(self, src):
         self.src = memoryview(src)
@@ -133,8 +136,9 @@ class UParser:
         return key, value
 
     def identifier(self):
-        self.expect(UParser.IDENTIFIER_RE)
-        return self.match[0].decode()
+        if self.accept(UParser.IDENTIFIER_RE):
+            return self.match[0].decode()
+        raise Exception("line {0}: expected identifier, got {1}".format(self.line, self.error_token()))
 
     def value(self):
         if self.accept(UParser.FLOAT_RE):
@@ -151,8 +155,10 @@ class UParser:
         if self.accept(UParser.QUOTED_STRING_RE):
             return self.match[1].decode()
         if self.accept(UParser.KEYWORD_RE):
-            return self.match[0].decode()
-        raise Exception('expected integer, float, string, or bool')
+            if not self.match[0] in (b'true', b'false'):
+                raise Exception("line {0}: expected bool, got '{1}'".format(self.line, self.match[0].decode()))
+            return self.match[0] == b'true'
+        raise Exception("line {0}: expected integer, float, string, or bool, got {1}".format(self.line, self.error_token()))
 
 class UVertex(UBlock):
     storage = 'vertexes'
