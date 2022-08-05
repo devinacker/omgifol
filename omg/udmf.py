@@ -35,7 +35,7 @@ class UBlock:
                     value = fallback(value)
                 else:
                     raise TypeError
-            key = re.sub(r'^[0-9]', '_', re.sub(r'[^A-Za-z0-9_]', '_', key))
+            key = re.sub(r'^([0-9])', r'_\1', re.sub(r'[^A-Za-z0-9_]', '_', key))
             if key in type(self).defaults and value == type(self).defaults[key]:
                 continue
             if isinstance(value, bool) and not value:
@@ -46,7 +46,8 @@ class UBlock:
         return out
 
 class UParser:
-    IDENTIFIER_RE    = re.compile(rb'[A-Za-z_]+[A-Za-z0-9_]*')
+   #IDENTIFIER_RE    = re.compile(rb'[A-Za-z_]+[A-Za-z0-9_]*')
+    IDENTIFIER_RE    = re.compile(rb'[A-Za-z0-9_]+') # allow leading digits per UDMF 1.0 (will be changed upon saving)
     INTEGER_RE       = re.compile(rb'([+-]?[1-9]+[0-9]*)|(0[0-7]+)|(0x[0-9A-Fa-f]+)|(0)')
     FLOAT_RE         = re.compile(rb'[+-]?[0-9]+\.[0-9]*([eE][+-]?[0-9]+)?')
     QUOTED_STRING_RE = re.compile(rb'"([^"\\]*(\\.[^"\\]*)*)"')
