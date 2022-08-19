@@ -53,6 +53,7 @@ class UParser:
     QUOTED_STRING_RE = re.compile(rb'"([^"\\]*(\\.[^"\\]*)*)"')
     KEYWORD_RE       = re.compile(rb'[^{}();"\'\n\t ]+')
     WHITESPACE_RE    = re.compile(rb'(\s|(\n|^)//[^\n]+|/\*(\*(?!\/)|[^*])*\*/)+')
+
     def __init__(self, blocktypes):
         self.blocktypes = blocktypes
         self.src = None
@@ -162,6 +163,7 @@ class UParser:
 
 class UVertex(UBlock):
     storage = 'vertexes'
+
     def __init__(self, x=0.0, y=0.0, **kwargs):
         self.x = x
         self.y = y
@@ -171,6 +173,7 @@ class USidedef(UBlock):
     storage = 'sidedefs'
     defaults = {'texturetop': '-', 'texturebottom': '-', 'texturemiddle': '-',
             'offsetx': 0, 'offsety': 0}
+
     def __init__(self, sector=None, **kwargs):
         self.sector = sector
         super().__init__(**kwargs)
@@ -180,10 +183,10 @@ class ULinedef(UBlock):
     defaults = {
             'special': 0, 'arg0': 0, 'arg1': 0, 'arg2': 0, 'arg3': 0, 'arg4': 0,
             'sideback': -1, 'id': -1}
-    flags = {'_Base':[
-        'blocking','blockmonsters','twosided',
-        'dontpegtop','dontpegbottom','secret',
-        'blocksound','dontdraw','mapped',]}
+    flags = {'_Base': [
+            'blocking','blockmonsters','twosided',
+            'dontpegtop','dontpegbottom','secret',
+            'blocksound','dontdraw','mapped',]}
     flags['Doom'] = flags['_Base'] + ['passuse']
     flags['Heretic'] = flags['_Base']
     flags['Hexen'] = flags['_Base'] + [
@@ -213,12 +216,9 @@ class ULinedef(UBlock):
 class USector(UBlock):
     storage = 'sectors'
     defaults = {
-      'heightfloor': 0,
-      'heightceiling': 0,
-      'lightlevel': 160,
-      'special': 0,
-      'id': 0
-      }
+      'heightfloor': 0, 'heightceiling': 0,
+      'lightlevel': 160, 'special': 0, 'id': 0}
+
     def __init__(self, texturefloor='-', textureceiling='-', **kwargs):
         self.texturefloor = texturefloor
         self.textureceiling = textureceiling
@@ -325,11 +325,11 @@ class UMapEditor:
     def from_oldformat(self, lumpgroup, namespace=None):
         """Import a classic format (Doom or ZDoom/Hexen) map.
 
-        For ZDoom maps, deprecated line specials (such as Line_SetIdentification) will
-        automatically be translated to the UDMF equivalent.
+        For ZDoom maps, deprecated line specials (such as Line_SetIdentification)
+        will automatically be translated to the UDMF equivalent.
 
-        If namespace is not specified, it will be given a default value based on the map's
-        original format (vanilla or ZDoom/Hexen)."""
+        If namespace is not specified, it will be given a default value based on
+        the map's original format (vanilla or ZDoom/Hexen)."""
         m = MapEditor(lumpgroup)
         self.vertexes = []
         self.sidedefs = []
@@ -337,7 +337,7 @@ class UMapEditor:
         self.sectors = []
         self.things = []
         self.namespace = namespace
-        
+
         hexencompat = 'BEHAVIOR' in lumpgroup
         if namespace not in udmf_namespaces:
             namespace = 'ZDoom' if hexencompat else udmf_namespaces[0]
@@ -354,7 +354,7 @@ class UMapEditor:
         for thing in m.things:
             block = UThing(float(thing.x), float(thing.y), thing.type)
             self.things.append(block)
-            
+
             if thing.angle != 0:
                 block.angle = thing.angle
 
@@ -381,12 +381,12 @@ class UMapEditor:
 
             if linedef.back != Linedef.NONE:
                 block.sideback = linedef.back
-            
+
             for f in range(len(ULinedef.flags[namespace])):
                 flag = ULinedef.flags[namespace][f]
                 if flag:
                     setattr(block, flag, bool(linedef.flags & (1 << f)))
-                    
+
             if hexencompat:
                 if linedef.action == 121: # Line_SetIdentification
                     block.id = linedef.arg0 + linedef.arg4 * 256
@@ -397,11 +397,11 @@ class UMapEditor:
                     for i in range(5):
                         key = 'arg{0}'.format(i)
                         setattr(block, key, getattr(linedef, key))
-                    
+
                     trigger = ((linedef.flags & 0x1c00) >> 10)
                     if trigger < len(ULinedef.triggers_hexen):
                         setattr(block, ULinedef.triggers_hexen[trigger], True)
-                    
+
                     # handle line specials that set a line ID, extended flags, etc. based on the zdoom udmf spec
                     if linedef.action == 1: # Polyobj_StartLine
                         block.id = linedef.arg3
@@ -482,6 +482,7 @@ class UMapEditor:
         for sector in self.sectors:
             out += 'sector ' + sector.to_textmap(fallback)
         return out
+
     def serialize_field(self, value):
         if isinstance(value, UVertex):
             return self.vertexes.index(value)
