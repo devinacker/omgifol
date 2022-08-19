@@ -261,8 +261,27 @@ udmf_types = {
 udmf_namespaces = ['Doom', 'Heretic', 'Hexen', 'Strife', 'ZDoom']
 
 class UMapEditor:
+    """UDMF map editor.
+
+    Data members:
+        vertexes      List containing UVertex objects
+        sidedefs      List containing USidedef objects
+        linedefs      List containing ULinedef objects
+        sectors       List containing USector objects
+        things        List containing UThing objects
+        behavior      Lump object containing compiled ACS scripts
+        scripts       Lump object containing ACS script source
+        namespace     Map's UDMF namespace (see omg.udmf_namespaces for recognized values)
+        """
 
     def __init__(self, lumpgroup=None, namespace=None):
+        """Create new, optionally from a lump group.
+
+        lumpgroup can be either a UDMF map or a classic Doom or ZDoom/Hexen map.
+        Maps using the old format will be converted to UDMF automatically.
+
+        If namespace is not specified, it will use the value stored in lumpgroup,
+        if available."""
         self.vertexes = []
         self.sidedefs = []
         self.linedefs = []
@@ -276,6 +295,13 @@ class UMapEditor:
             self.from_lump(lumpgroup, namespace)
 
     def from_lump(self, lumpgroup, namespace=None):
+        """Load entries from a lump group.
+
+        lumpgroup can be either a UDMF map or a classic Doom or ZDoom/Hexen map.
+        Maps using the old format will be converted to UDMF automatically.
+
+        If namespace is not specified, it will use the value stored in lumpgroup,
+        if available."""
         if 'TEXTMAP' not in lumpgroup:
             self.from_oldformat(lumpgroup, namespace)
             return
@@ -296,7 +322,14 @@ class UMapEditor:
         if 'SCRIPTS' in lumpgroup:
             self.scripts = lumpgroup['SCRIPTS']
 
-    def from_oldformat(self, lumpgroup, namespace):
+    def from_oldformat(self, lumpgroup, namespace=None):
+        """Import a classic format (Doom or ZDoom/Hexen) map.
+
+        For ZDoom maps, deprecated line specials (such as Line_SetIdentification) will
+        automatically be translated to the UDMF equivalent.
+
+        If namespace is not specified, it will be given a default value based on the map's
+        original format (vanilla or ZDoom/Hexen)."""
         m = MapEditor(lumpgroup)
         self.vertexes = []
         self.sidedefs = []
