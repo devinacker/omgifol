@@ -4,11 +4,10 @@ Originally by Fredrik Johansson (http://fredrikj.net).
 Maintained since 0.3.0 by Devin Acker (http://revenant1.net).
 
 Use `pip install omgifol` to install. See manual.html (and module/class 
-docstrings) for usage notes. Requires Python 2.7 or Python 3.x.
+docstrings) for usage notes. Requires Python 3.x.
 
 Some planned things:
 
- - UDMF map support
  - Basic Doom 0.4 / 0.5 wad support in master
  - Basic Doom 64 wad support
  - support for non-vanilla/Boom maps in lineinfo
