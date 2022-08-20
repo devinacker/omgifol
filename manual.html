@@ -34,16 +34,16 @@
 </div>
 </td></tr></table>
 <a name="Installation"></a><h2>Installation</h2>
-<ol><li> Install Python 3, which can be downloaded from <a href="http://python.org" class='external' title="http://python.org">http://python.org</a>
+<ol><li> Install Python 3, which can be downloaded from <a href="http://python.org" class="external" title="http://python.org">http://python.org</a>
 </li><li> Use pip to install Omgifol: <tt>pip install omgifol</tt>
 </li><li> Or, if pip is unavailable, extract the "omg" directory in the Omgifol package into <em>pythondir</em>/Lib/site-packages (replace <em>pythondir</em> with the directory where Python is installed).
 </li></ol>
 <p>Optionally:
 
 </p>
-<ol><li> Install the <a href='https://python-pillow.github.io' class='external' title="https://python-pillow.github.io">Pillow library</a><span class='urlexpansion'> (<i>https://python-pillow.github.io</i>)</span>. This is required to import or export images.
+<ol><li> Install the <a href="https://python-pillow.github.io" class="external" title="https://python-pillow.github.io">Pillow library</a><span class="urlexpansion"> (<i>https://python-pillow.github.io</i>)</span>. This is required to import or export images.
 </li>
-<li> Install the <a href='https://pysoundfile.readthedocs.io' class='external' title="https://pysoundfile.readthedocs.io">PySoundFile library</a><span class='urlexpansion'> (<i>https://pysoundfile.readthedocs.io</i>)</span>. This is required to import or export sound files.
+<li> Install the <a href="https://pysoundfile.readthedocs.io" class="external" title="https://pysoundfile.readthedocs.io">PySoundFile library</a><span class="urlexpansion"> (<i>https://pysoundfile.readthedocs.io</i>)</span>. This is required to import or export sound files.
 </li>
 </ol>
 
@@ -53,7 +53,7 @@
 <pre> from omg import *
 </pre>
 <a name="WAD_objects"></a><h2>WAD objects</h2>
-<p>A <tt >WAD</tt > is an abstract representation of a WAD file. A <tt >WAD</tt > object can load content from a WAD file, or save content to a WAD file, but is entirely memory-resident.
+<p>A <tt>WAD</tt> is an abstract representation of a WAD file. A <tt>WAD</tt> object can load content from a WAD file, or save content to a WAD file, but is entirely memory-resident.
 
 </p>
 <a name="Loading_from_WAD_files"></a><h3>Loading from WAD files</h3>
@@ -85,20 +85,20 @@
 with the same name, etc.
 </p>
 <a name="Writing_to_WAD_files"></a><h3>Writing to WAD files</h3>
-<p>If <em>a</em> is a <tt >WAD</tt > instance:
+<p>If <em>a</em> is a <tt>WAD</tt> instance:
 </p>
 <pre> a.to_file('some_wad.wad')
 </pre>
 <a name="Accessing_lumps"></a><h3>Accessing lumps</h3>
 
-<p>Lumps are stored in <em>groups</em>. Each <tt >WAD</tt > holds a number of groups, representing different categories of lumps. Each group is an ordered dictionary; that is, it works just like a Python <tt ><a href='http://docs.python.org/tut/node7.html#SECTION007500000000000000000' class='external' title="http://docs.python.org/tut/node7.html#SECTION007500000000000000000">dict</a><span class='urlexpansion'> (<i>http://docs.python.org/tut/node7.html#SECTION007500000000000000000</i>)</span></tt > object but remembers in which order lumps were inserted.
-</p><p>All lumps are instances of the <tt >Lump</tt > class; see below for its documentation.
+<p>Lumps are stored in <em>groups</em>. Each <tt>WAD</tt> holds a number of groups, representing different categories of lumps. Each group is an ordered dictionary; that is, it works just like a Python <tt><a href="https://docs.python.org/3/tutorial/datastructures.html#dictionaries" class="external" title="https://docs.python.org/3/tutorial/datastructures.html#dictionaries">dict</a><span class="urlexpansion"> (<i>https://docs.python.org/3/tutorial/datastructures.html#dictionaries</i>)</span></tt> object but remembers in which order lumps were inserted.
+</p><p>All lumps are instances of the <tt>Lump</tt> class; see below for its documentation.
 
-</p><p>To retrieve the sprite called <tt >CYBR1A</tt > from the <tt >WAD</tt > object <em>a</em>, do:
+</p><p>To retrieve the sprite called <tt>CYBR1A</tt> from the <tt>WAD</tt> object <em>a</em>, do:
 </p>
 <pre>   a.sprites['CYBR1A']
 </pre>
-<p>And to replace it with some other lump object called <tt >some_lump</tt >:
+<p>And to replace it with some other lump object called <tt>some_lump</tt>:
 </p>
 
 <pre>   a.sprites['CYBR1A'] = some_lump
@@ -127,7 +127,7 @@ with the same name, etc.
 </pre>
 <p>This scheme can be modified if desired; refer to wad.py for the details.
 
-</p><p>The <tt >maps</tt > and <tt >glmaps</tt > are special. These do not contain lumps, but additional groups of lumps, one for each map. So if you access E1M1:
+</p><p>The <tt>maps</tt> and <tt>glmaps</tt> are special. These do not contain lumps, but additional groups of lumps, one for each map. So if you access E1M1:
 </p>
 <pre>   a.maps['E1M1']
 </pre>
@@ -140,7 +140,7 @@ the individual lumps, do:
 
 </p>
 <a name="Merging"></a><h3>Merging</h3>
-<p>To merge two <tt >WAD</tt >s <em>a</em> and <em>b</em>:
+<p>To merge two <tt>WAD</tt>s <em>a</em> and <em>b</em>:
 </p>
 <pre> c = a + b
 </pre>
@@ -161,12 +161,12 @@ lumps from <em>b</em> will replace those from <em>a</em>.
 <p>Use with care for sections of different types.
 </p><p>Note that some sections do more than just copy over the list of lumps
 when they merge. For example, adding two <em>txdefs</em> sections together
-will automagically merge the <tt >TEXTURE1</tt >, <tt >TEXTURE2</tt > and <tt >PNAMES</tt > lumps. <tt >txdefs</tt >
+will automagically merge the <tt>TEXTURE1</tt>, <tt>TEXTURE2</tt> and <tt>PNAMES</tt> lumps. <tt>txdefs</tt>
 
-also get merged this way when two <tt >WAD</tt > objects are merged on the top level.
+also get merged this way when two <tt>WAD</tt> objects are merged on the top level.
 </p>
 <a name="Lumps"></a><h2>Lumps</h2>
-<p>The <tt >Lump</tt > class holds a single lump. The class provides the following data and methods:
+<p>The <tt>Lump</tt> class holds a single lump. The class provides the following data and methods:
 </p>
 <pre> .data                      The lump's raw data as a string
  .to_file(<em>filename</em>)         Save from a file
@@ -174,14 +174,14 @@ also get merged this way when two <tt >WAD</tt > objects are merged on the top l
  .copy()                    Return a copy
 
 </pre>
-<p>Creating a new lump called 'FOOF' containing the text 'Hello!' and inserting it into a <tt >WAD</tt > <em>w</em> would be done as follows:
+<p>Creating a new lump called 'FOOF' containing the text 'Hello!' and inserting it into a <tt>WAD</tt> <em>w</em> would be done as follows:
 </p>
 <pre> w.data['FOOF'] = Lump('Hello!')
 </pre>
 <a name="Graphic_lumps"></a><h3>Graphic lumps</h3>
-<p>There are subclasses of <tt >Lump</tt > for different types of lumps. Currently, only these provide special functionality: <tt >Graphic</tt >, <tt >Flat</tt >, and <tt>Sound</tt>.
+<p>There are subclasses of <tt>Lump</tt> for different types of lumps. Currently, only these provide special functionality: <tt>Graphic</tt>, <tt>Flat</tt>, and <tt>Sound</tt>.
 
-</p><p><tt >Graphic</tt >, used to represent Doom format graphics, provides the following settable attributes:
+</p><p><tt>Graphic</tt>, used to represent Doom format graphics, provides the following settable attributes:
 </p>
 <pre> .offsets              (x, y) offsets
  .x_offset             x offset
@@ -190,7 +190,7 @@ also get merged this way when two <tt >WAD</tt > objects are merged on the top l
  .width                width in pixels
  .height               height in pixels
 </pre>
-<p><tt >Graphic</tt > defines the following methods in adddition to those defined by <tt >Lump</tt >:
+<p><tt>Graphic</tt> defines the following methods in adddition to those defined by <tt>Lump</tt>:
 </p>
 <pre> .from_raw             Load from a raw image
  .to_raw               Return the image converted to raw pixels
@@ -199,9 +199,9 @@ also get merged this way when two <tt >WAD</tt > objects are merged on the top l
  .translate            Translate to another palette
 </pre>
 <p>For the argument lists used by these functions, refer to the code and the inline documenation in lump.py.
-</p><p><tt >Flat</tt > works similarly to <tt >Graphic</tt >, but handles format conversions slightly differently.
+</p><p><tt>Flat</tt> works similarly to <tt>Graphic</tt>, but handles format conversions slightly differently.
 
-</p><p><tt >Sound</tt >, used to represent Doom format sounds, provides the following settable attributes:
+</p><p><tt>Sound</tt>, used to represent Doom format sounds, provides the following settable attributes:
 </p>
 <pre> .format               Sound effect format (0-3)
  .length               Length of sound in samples
@@ -209,7 +209,7 @@ also get merged this way when two <tt >WAD</tt > objects are merged on the top l
  .midi_bank            MIDI patch bank number (formats 1-2 only)
  .midi_patch           MIDI patch number (formats 1-2 only)
 </pre>
-<p><tt >Sound</tt > defines the following methods in adddition to those defined by <tt >Lump</tt >:
+<p><tt>Sound</tt> defines the following methods in adddition to those defined by <tt>Lump</tt>:
 </p>
 <pre> .from_raw             Load from a raw sound file
  .to_raw               Return the sound file converted to raw samples
@@ -222,11 +222,11 @@ also get merged this way when two <tt >WAD</tt > objects are merged on the top l
 <a name="Editors"></a><h2>Editors</h2>
 <p><em>Editors</em> are used to edit lumps or lump groups. They represent lump data with high-level objects and structures, and provide methods to modify the data. The following editors have been implemented so far:
 </p>
-<ul><li> <tt >Colormap</tt > for the COLORMAP lump
-</li><li> <tt >Playpal</tt > for the PLAYPAL lump
-</li><li> <tt >Textures</tt > for TEXTURE1/TEXTURE2/PNAMES
+<ul><li> <tt>Colormap</tt> for the COLORMAP lump
+</li><li> <tt>Playpal</tt> for the PLAYPAL lump
+</li><li> <tt>Textures</tt> for TEXTURE1/TEXTURE2/PNAMES
 
-</li><li> <tt >MapEditor</tt > for maps
+</li><li> <tt>MapEditor</tt> for maps
 </li></ul>
 <p>All editors provide the following methods:
 </p>
