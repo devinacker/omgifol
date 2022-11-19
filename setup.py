@@ -5,7 +5,7 @@ import glob
 
 setup(
 	name = 'omgifol',
-	version = '0.4.0',
+	version = '0.5.0',
 	description = 'A Python library for manipulation of Doom WAD files',
 	url = 'https://github.com/devinacker/omgifol',
 	author = 'Devin Acker, Fredrik Johansson',
@@ -17,6 +17,7 @@ setup(
 		'Programming Language :: Python :: 3',
 		'Operating System :: OS Independent',
 	],
+	python_requires = ">=3.3",
 	packages = find_packages(exclude = ['demo']),
 	scripts = glob.glob("demo/*.py"),
 )
