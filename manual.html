@@ -30,11 +30,12 @@
 <div class="tocline"><a href="#Editors">5 Editors</a><br /></div>
 <div class="tocindent">
 <a href="#Map_editor">5.1 Map editor</a><br />
+<a href="#UDMF_map_editor">5.2 UDMF map editor</a><br />
 
 </div>
 </td></tr></table>
 <a name="Installation"></a><h2>Installation</h2>
-<ol><li> Install Python 3, which can be downloaded from <a href="http://python.org" class="external" title="http://python.org">http://python.org</a>
+<ol><li> Install Python 3, which can be downloaded from <a href="https://python.org" title="https://python.org">https://python.org</a>
 </li><li> Use pip to install Omgifol: <tt>pip install omgifol</tt>
 </li><li> Or, if pip is unavailable, extract the "omg" directory in the Omgifol package into <em>pythondir</em>/Lib/site-packages (replace <em>pythondir</em> with the directory where Python is installed).
 </li></ol>
@@ -91,7 +92,7 @@ with the same name, etc.
 </pre>
 <a name="Accessing_lumps"></a><h3>Accessing lumps</h3>
 
-<p>Lumps are stored in <em>groups</em>. Each <tt>WAD</tt> holds a number of groups, representing different categories of lumps. Each group is an ordered dictionary; that is, it works just like a Python <tt><a href="https://docs.python.org/3/tutorial/datastructures.html#dictionaries" class="external" title="https://docs.python.org/3/tutorial/datastructures.html#dictionaries">dict</a><span class="urlexpansion"> (<i>https://docs.python.org/3/tutorial/datastructures.html#dictionaries</i>)</span></tt> object but remembers in which order lumps were inserted.
+<p>Lumps are stored in <em>groups</em>. Each <tt>WAD</tt> holds a number of groups, representing different categories of lumps. Each group is an ordered dictionary; that is, it works just like a Python <tt>collections.OrderedDict</tt> object.
 </p><p>All lumps are instances of the <tt>Lump</tt> class; see below for its documentation.
 
 </p><p>To retrieve the sprite called <tt>CYBR1A</tt> from the <tt>WAD</tt> object <em>a</em>, do:
@@ -118,6 +119,7 @@ with the same name, etc.
    colormaps           Boom colormaps (between C markers)
    ztextures           ZDoom textures (between TX markers)
    maps                Map data
+   udmfmaps            Map data (UDMF)
    glmaps              GL nodes map data
    music               Music (all lumps named D_*)
    sounds              Sound effects (all lumps named DS* or DP*)
@@ -198,7 +200,7 @@ also get merged this way when two <tt>WAD</tt> objects are merged on the top lev
  .to_Image             Return the image converted to a PIL image
  .translate            Translate to another palette
 </pre>
-<p>For the argument lists used by these functions, refer to the code and the inline documenation in lump.py.
+<p>For the argument lists used by these functions, refer to the code and the inline documentation in lump.py.
 </p><p><tt>Flat</tt> works similarly to <tt>Graphic</tt>, but handles format conversions slightly differently.
 
 </p><p><tt>Sound</tt>, used to represent Doom format sounds, provides the following settable attributes:
@@ -227,6 +229,7 @@ also get merged this way when two <tt>WAD</tt> objects are merged on the top lev
 </li><li> <tt>Textures</tt> for TEXTURE1/TEXTURE2/PNAMES
 
 </li><li> <tt>MapEditor</tt> for maps
+</li><li> <tt>UMapEditor</tt> for maps in UDMF format
 </li></ul>
 <p>All editors provide the following methods:
 </p>
@@ -247,6 +250,18 @@ also get merged this way when two <tt>WAD</tt> objects are merged on the top lev
 <pre> m = MapEditor(wad.maps["E1M1"])
  m.vertexes[103].x += 1
  wad.maps["E1M1"] = m.to_lumps()
+</pre>
+
+<a name="UDMF_map_editor"></a><h3>UDMF map editor</h3>
+<p><tt>UMapEditor</tt> works similarly to <tt>MapEditor</tt>, except the attributes of map data are named based on how they appear in the <tt>TEXTMAP</tt> lump itself. See the <a href="https://www.doomworld.com/eternity/engine/stuff/udmf11.txt">UDMF specification</a> for examples.
+</p>
+<p><tt>UMapEditor</tt> can also import non-UDMF maps, and line specials will automatically be translated to their UDMF equivalents when necessary:
+</p>
+<pre> # Load and automatically convert a Doom-format map
+ m = UMapEditor(wad.maps["E1M1"])
+
+ # Load a UDMF-format map
+ m = UMapEditor(wad.udmfmaps["MAP01"])
 </pre>
 <p>Refer to the source code for more information.</p>
 </body>
