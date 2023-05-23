@@ -349,7 +349,7 @@ class MapEditor:
         m["_HEADER_"] = self.header
         m["VERTEXES"] = Lump(join([x.pack() for x in self.vertexes]))
         m["THINGS"  ] = Lump(join([x.pack() for x in self.things  ]))
-        m["LINEDEFS"] = Lump(join([x.pack() for x in linedefs     ]))
+        m["LINEDEFS"] = Lump(join([x.pack() for x in self.linedefs]))
         m["SIDEDEFS"] = Lump(join([x.pack() for x in self.sidedefs]))
         m["SECTORS" ] = Lump(join([x.pack() for x in self.sectors ]))
         m["NODES"]    = Lump(join([x.pack() for x in self.nodes   ]))
