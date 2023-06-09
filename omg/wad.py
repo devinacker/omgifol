@@ -218,6 +218,7 @@ _graphics     = ['TITLEPIC', 'CWILV*', 'WI*', 'M_*',
 # Must be in order: markers first, ['*'] name group last
 defstruct = [
     [MarkerGroup, 'sprites',   Graphic, 'S'],
+    [MarkerGroup, 'libraries', Graphic, 'A'],
     [MarkerGroup, 'patches',   Graphic, 'P'],
     [MarkerGroup, 'flats',     Flat,    'F'],
     [MarkerGroup, 'colormaps', Lump,    'C'],
@@ -232,7 +233,7 @@ defstruct = [
     [NameGroup,   'data',     Lump,  ['*']]
 ]
 
-write_order = ['data', 'colormaps', 'maps', 'glmaps', 'udmfmaps', 'txdefs',
+deforder = ['data', 'colormaps', 'maps', 'glmaps', 'libraries', 'udmfmaps', 'txdefs',
     'sounds', 'music', 'graphics', 'sprites', 'patches', 'flats',
     'ztextures']
 
@@ -257,7 +258,7 @@ class WAD:
                        the structure definition
     """
 
-    def __init__(self, from_file=None, structure=defstruct):
+    def __init__(self, from_file=None, structure=defstruct, write_order=deforder):
         """Create a new WAD. The optional `source` argument may be a
         string specifying a path to a file or a WadIO object.
         If omitted, an empty WAD is created. A WADStructure object
@@ -267,6 +268,7 @@ class WAD:
         self.__category = 'root'
         self.palette = omg.palette.default
         self.structure = structure
+        self.write_order = write_order
         self.groups = []
         for group_def in self.structure:
             instance = group_def[0](*tuple(group_def[1:]))
@@ -300,7 +302,7 @@ class WAD:
                 os.remove(tmpfilename)
             os.rename(filename, tmpfilename)
         w = WadIO(filename)
-        for group in write_order:
+        for group in self.write_order:
             self.__dict__[group].save_wadio(w, use_free=False)
         w.save()
         if use_backup:
