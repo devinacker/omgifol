@@ -70,6 +70,53 @@ class Linedef(WADStruct):
         self.front = self.back = Linedef.NONE
         super().__init__(*args, **kwargs)
 
+class AlphaLinedef(WADStruct):
+    """
+    Represents a map linedef.
+
+    Linedef.NONE is the placeholder value for unused sidedefs.
+    Using the value -1 is no longer supported.
+    """
+    NONE = 0xffff
+
+    _flags_ = [ # actual flags in this format version are unknown
+        ("impassable",     1),
+        ("block_monsters", 1),
+        ("two_sided",      1),
+        ("upper_unpeg",    1),
+        ("lower_unpeg",    1),
+        ("secret",         1),
+        ("block_sound",    1),
+        ("invisible",      1),
+        ("automap",        1)
+    ]
+
+    _fields_ = [
+        ("vx_a",   ctypes.c_uint16),
+        ("vx_b",   ctypes.c_uint16),
+        ("flags",  WADFlags(_flags_)),
+        ("dummy1", ctypes.c_uint16),
+        ("action", ctypes.c_uint16),
+        ("tag",    ctypes.c_uint16),
+        ("front",  ctypes.c_uint16), # actually unknown, but reuse it
+        ("sector1",ctypes.c_uint16),
+        ("off_x1", ctypes.c_uint16),
+        ("tx_mid1",ctypes.c_uint16),
+        ("tx_up1", ctypes.c_uint16),
+        ("tx_low1",ctypes.c_uint16),
+        ("back",   ctypes.c_uint16), # actually unknown, but reuse it
+        ("sector2",ctypes.c_uint16),
+        ("off_x2", ctypes.c_uint16),
+        ("tx_mid2",ctypes.c_uint16),
+        ("tx_up2", ctypes.c_uint16),
+        ("tx_low2",ctypes.c_uint16)
+    ]
+    _anonymous_ = ("flags",)
+
+    def __init__(self, *args, **kwargs):
+        self.front = self.back = Linedef.NONE
+        super().__init__(*args, **kwargs)
+
 # TODO: an enum or something for triggers
 class ZLinedef(WADStruct):
     """
@@ -129,6 +176,26 @@ class Thing(WADStruct):
         ("y",     ctypes.c_int16),
         ("angle", ctypes.c_uint16),
         ("type",  ctypes.c_uint16),
+        ("flags", WADFlags(_flags_))
+    ]
+    _anonymous_ = ("flags",)
+
+class AlphaThing(WADStruct):
+    """Represents a map thing."""
+    _flags_ = [
+        ("easy",        1),
+        ("medium",      1),
+        ("hard",        1),
+        ("deaf",        1),
+        ("multiplayer", 1)
+    ]
+
+    _fields_ = [
+        ("x",     ctypes.c_int16),
+        ("y",     ctypes.c_int16),
+        ("angle", ctypes.c_uint16),
+        ("type",  ctypes.c_uint16),
+        ("dummy", ctypes.c_uint16),
         ("flags", WADFlags(_flags_))
     ]
     _anonymous_ = ("flags",)
@@ -292,31 +359,58 @@ class MapEditor:
         try:
             self.header   = m["_HEADER_"]
 
-            self.vertexes = self._unpack_lump(Vertex,    m["VERTEXES"].data)
-            self.sidedefs = self._unpack_lump(Sidedef,   m["SIDEDEFS"].data)
-            self.sectors  = self._unpack_lump(Sector,    m["SECTORS"].data)
-
-            if "BEHAVIOR" in m:
-                # Hexen / ZDoom map
-                self.Thing   = ZThing
-                self.Linedef = ZLinedef
-                self.behavior = m["BEHAVIOR"]
-                # optional script sources
-                try:
-                    self.scripts = m[wcinlist(m, "SCRIPT*")[0]]
-                except IndexError:
-                    self.scripts = Lump()
+            if "FLATNAME" in m: # alpha
+                self.Thing = AlphaThing
+                self.Linedef = AlphaLinedef
+            
+                self.vertexes = self._unpack_lump(Vertex,       m["POINTS"].data[4:])
+                self.linedefs = self._unpack_lump(self.Linedef, m["LINES"].data[4:])
+                self.sectors  = []
+                self.things   = self._unpack_lump(self.Thing,   m["THINGS"].data[4:])
+                
+                self.sidedefs = []
+                #TODO: convert sectors
+                
+                # make sidedefs from linedefs using repurposed front/back fields
+                # TODO: do something about texture numbers (TEXTURES lump)
+                for line in self.linedefs:
+                    if line.sector1 >= 0:
+                        line.front = len(self.sidedefs)
+                        self.sidedefs.append(Sidedef(off_x=line.off_x1, off_y=0, sector=line.sector1))
+                    else:
+                        line.front = 0xffff
+                    
+                    if line.sector2 >= 0:
+                        line.back = len(self.sidedefs)
+                        self.sidedefs.append(Sidedef(off_x=line.off_x2, off_y=0, sector=line.sector2))
+                    else:
+                        line.back = 0xffff
             else:
-                self.Thing   = Thing
-                self.Linedef = Linedef
-                try:
-                    del self.behavior
-                    del self.scripts
-                except AttributeError:
-                    pass
+                self.vertexes = self._unpack_lump(Vertex,    m["VERTEXES"].data)
+                self.sidedefs = self._unpack_lump(Sidedef,   m["SIDEDEFS"].data)
+                self.sectors  = self._unpack_lump(Sector,    m["SECTORS"].data)
 
-            self.things   = self._unpack_lump(self.Thing,   m["THINGS"].data)
-            self.linedefs = self._unpack_lump(self.Linedef, m["LINEDEFS"].data)
+                if "BEHAVIOR" in m:
+                    # Hexen / ZDoom map
+                    self.Thing   = ZThing
+                    self.Linedef = ZLinedef
+                    self.behavior = m["BEHAVIOR"]
+                    # optional script sources
+                    try:
+                        self.scripts = m[wcinlist(m, "SCRIPT*")[0]]
+                    except IndexError:
+                        self.scripts = Lump()
+                else:
+                    self.Thing   = Thing
+                    self.Linedef = Linedef
+                    try:
+                        del self.behavior
+                        del self.scripts
+                    except AttributeError:
+                        pass
+
+                self.things   = self._unpack_lump(self.Thing,   m["THINGS"].data)
+                self.linedefs = self._unpack_lump(self.Linedef, m["LINEDEFS"].data)
         except KeyError as e:
             raise ValueError("map is missing %s lump" % e)
 

@@ -202,6 +202,7 @@ class TxdefGroup(NameGroup):
 #
 
 # First some lists...
+_alphamaptail = ['FLATNAME', 'POINTS', 'LINES', 'SECTORS', 'THINGS']
 _maptail    = ['THINGS',   'LINEDEFS', 'SIDEDEFS', # Must be in order
                'VERTEXES', 'SEGS',     'SSECTORS',
                'NODES',    'SECTORS',  'REJECT',
@@ -223,6 +224,7 @@ defstruct = [
     [MarkerGroup, 'colormaps', Lump,    'C'],
     [MarkerGroup, 'ztextures', Graphic, 'TX'],
     [HeaderGroup, 'maps',   Lump, _maptail],
+    [HeaderGroup, 'alphamaps', Lump, _alphamaptail],
     [HeaderGroup, 'glmaps', Lump, _glmaptail],
     [HeaderGroup, 'udmfmaps', Lump, _udmfmaptail],
     [NameGroup,   'music',    Music, ['D_*']],
@@ -287,6 +289,7 @@ class WAD:
             raise TypeError("Expected WadIO or file path string")
         for group in self.groups:
             group.load_wadio(w)
+        self.maps += self.alphamaps
 
     def to_file(self, filename):
         """Save contents to a WAD file. Caution: if a file with the given name
